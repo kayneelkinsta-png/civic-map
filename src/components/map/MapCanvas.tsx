@@ -64,6 +64,19 @@ export default function MapCanvas({
   const dataRef = useRef<FeatureCollection>({ type: "FeatureCollection", features: [] });
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
+  const assetDataRef = useRef<FeatureCollection>({ type: "FeatureCollection", features: [] });
+  const onViewportChangeRef = useRef(onViewportChange);
+  onViewportChangeRef.current = onViewportChange;
+
+  assetDataRef.current = {
+    type: "FeatureCollection",
+    features: assets.map((asset) => ({
+      type: "Feature" as const,
+      id: asset.id,
+      geometry: { type: "Point" as const, coordinates: [asset.longitude, asset.latitude] },
+      properties: { id: asset.id, emoji: assetMeta(asset.asset_type).emoji },
+    })),
+  };
 
   // Build GeoJSON from issues
   const emojiBySlug = new Map(categories.map((c) => [c.id, c.emoji]));
@@ -103,7 +116,41 @@ export default function MapCanvas({
       "bottom-right",
     );
 
+    const emitViewport = () => {
+      const b = map.getBounds();
+      onViewportChangeRef.current?.({
+        zoom: map.getZoom(),
+        bounds: { west: b.getWest(), south: b.getSouth(), east: b.getEast(), north: b.getNorth() },
+      });
+    };
+    map.on("moveend", emitViewport);
+    map.on("load", emitViewport);
+
     const addLayers = () => {
+      if (!map.getSource(ASSET_SRC)) {
+        map.addSource(ASSET_SRC, { type: "geojson", data: assetDataRef.current });
+        map.addLayer({
+          id: "asset-dot",
+          type: "circle",
+          source: ASSET_SRC,
+          minzoom: ASSET_MIN_ZOOM,
+          paint: {
+            "circle-radius": 11,
+            "circle-color": "#ffffff",
+            "circle-opacity": 0.9,
+            "circle-stroke-width": 1.5,
+            "circle-stroke-color": "#94a3b8",
+          },
+        });
+        map.addLayer({
+          id: "asset-emoji",
+          type: "symbol",
+          source: ASSET_SRC,
+          minzoom: ASSET_MIN_ZOOM,
+          layout: { "text-field": ["get", "emoji"], "text-size": 12, "text-allow-overlap": false },
+          paint: { "text-opacity": 0.85 },
+        });
+      }
       if (map.getSource(SRC)) return;
       map.addSource(SRC, {
         type: "geojson",
