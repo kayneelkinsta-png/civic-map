@@ -1,4 +1,13 @@
-import maplibregl from "maplibre-gl";
+import {
+  Map as MapLibreMap,
+  GeolocateControl,
+  NavigationControl,
+  Marker,
+  type GeoJSONSource,
+  type MapLayerMouseEvent,
+  type MapMouseEvent,
+} from "maplibre-gl";
+import type { FeatureCollection, Point } from "geojson";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useEffect, useRef } from "react";
 
@@ -39,9 +48,9 @@ export default function MapCanvas({
   interactivePins = true,
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<maplibregl.Map | null>(null);
-  const markerRef = useRef<maplibregl.Marker | null>(null);
-  const dataRef = useRef<GeoJSON.FeatureCollection>({ type: "FeatureCollection", features: [] });
+  const mapRef = useRef<MapLibreMap | null>(null);
+  const markerRef = useRef<Marker | null>(null);
+  const dataRef = useRef<FeatureCollection>({ type: "FeatureCollection", features: [] });
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
 
@@ -64,7 +73,7 @@ export default function MapCanvas({
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
-    const map = new maplibregl.Map({
+    const map = new MapLibreMap({
       container: containerRef.current,
       style: BASE_STYLES[baseStyle].url,
       center: [SOUTHAMPTON.lng, SOUTHAMPTON.lat],
@@ -73,9 +82,9 @@ export default function MapCanvas({
     });
     mapRef.current = map;
 
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
+    map.addControl(new NavigationControl({ showCompass: false }), "bottom-right");
     map.addControl(
-      new maplibregl.GeolocateControl({
+      new GeolocateControl({
         positionOptions: { enableHighAccuracy: true },
         trackUserLocation: true,
         showUserLocation: true,
@@ -152,18 +161,18 @@ export default function MapCanvas({
 
       if (!interactivePins) return;
 
-      map.on("click", "pin-halo", (e) => {
+      map.on("click", "pin-halo", (e: MapLayerMouseEvent) => {
         const f = e.features?.[0];
         if (f) onSelectRef.current(String(f.properties?.["id"]));
       });
-      map.on("click", "pin-emoji", (e) => {
+      map.on("click", "pin-emoji", (e: MapLayerMouseEvent) => {
         const f = e.features?.[0];
         if (f) onSelectRef.current(String(f.properties?.["id"]));
       });
-      map.on("click", "clusters", (e) => {
+      map.on("click", "clusters", (e: MapLayerMouseEvent) => {
         const f = e.features?.[0];
         if (!f) return;
-        const coords = (f.geometry as GeoJSON.Point).coordinates as [number, number];
+        const coords = (f.geometry as Point).coordinates as [number, number];
         map.easeTo({ center: coords, zoom: Math.min(17, map.getZoom() + 2.2) });
       });
       for (const layer of ["pin-halo", "pin-emoji", "clusters"]) {
@@ -185,7 +194,7 @@ export default function MapCanvas({
   // Data updates
   useEffect(() => {
     const map = mapRef.current;
-    const src = map?.getSource(SRC) as maplibregl.GeoJSONSource | undefined;
+    const src = map?.getSource(SRC) as GeoJSONSource | undefined;
     src?.setData(dataRef.current);
   }, [issues, selectedId, categories]);
 
@@ -219,14 +228,14 @@ export default function MapCanvas({
       const el = document.createElement("div");
       el.style.cssText =
         "width:30px;height:30px;border-radius:999px;background:#0f4c5c;border:4px solid #fff;box-shadow:0 6px 16px rgba(15,32,45,.35)";
-      markerRef.current = new maplibregl.Marker({ element: el, draggable: true })
+      markerRef.current = new Marker({ element: el, draggable: true })
         .setLngLat([pin.lng, pin.lat])
         .addTo(map);
       markerRef.current.on("dragend", () => {
         const pos = markerRef.current?.getLngLat();
         if (pos) onPinMove?.(pos.lat, pos.lng);
       });
-      map.on("click", (e) => {
+      map.on("click", (e: MapMouseEvent) => {
         markerRef.current?.setLngLat(e.lngLat);
         onPinMove?.(e.lngLat.lat, e.lngLat.lng);
       });
