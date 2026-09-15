@@ -48,6 +48,10 @@ function InsightsPage() {
     queryKey: ["insights-summary"],
     queryFn: fetchInsightsSummary,
   });
+  const { data: byWard = [] } = useQuery({
+    queryKey: ["insights-by-ward"],
+    queryFn: fetchInsightsByWard,
+  });
   const { data: confirmations = 0 } = useQuery({
     queryKey: ["confirmation-total"],
     queryFn: async () => {
