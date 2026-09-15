@@ -877,6 +877,9 @@ export type Database = {
           gss_code: string | null
           id: string
           name: string
+          source_id: string | null
+          source_updated_at: string | null
+          updated_at: string
         }
         Insert: {
           authority_id: string
@@ -885,6 +888,9 @@ export type Database = {
           gss_code?: string | null
           id?: string
           name: string
+          source_id?: string | null
+          source_updated_at?: string | null
+          updated_at?: string
         }
         Update: {
           authority_id?: string
@@ -893,6 +899,9 @@ export type Database = {
           gss_code?: string | null
           id?: string
           name?: string
+          source_id?: string | null
+          source_updated_at?: string | null
+          updated_at?: string
         }
         Relationships: [
           {
@@ -900,6 +909,13 @@ export type Database = {
             columns: ["authority_id"]
             isOneToOne: false
             referencedRelation: "authorities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wards_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "data_sources"
             referencedColumns: ["id"]
           },
         ]

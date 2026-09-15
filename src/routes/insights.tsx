@@ -6,6 +6,7 @@ import { AppShell } from "@/components/AppShell";
 import {
   ageInDays,
   fetchCategories,
+  fetchInsightsByWard,
   fetchInsightsSummary,
   fetchIssues,
 } from "@/lib/civic";
@@ -47,6 +48,10 @@ function InsightsPage() {
     queryKey: ["insights-summary"],
     queryFn: fetchInsightsSummary,
   });
+  const { data: byWard = [] } = useQuery({
+    queryKey: ["insights-by-ward"],
+    queryFn: fetchInsightsByWard,
+  });
   const { data: confirmations = 0 } = useQuery({
     queryKey: ["confirmation-total"],
     queryFn: async () => {
@@ -62,11 +67,8 @@ function InsightsPage() {
     const open = issues.filter((i) => i.status !== "RESOLVED");
     const resolved = issues.filter((i) => i.status === "RESOLVED");
     const byCategory = new Map<string, number>();
-    const byArea = new Map<string, number>();
     for (const issue of issues) {
       byCategory.set(issue.category_id, (byCategory.get(issue.category_id) ?? 0) + 1);
-      const area = issue.address_text?.split(",")[0]?.trim() ?? "Unknown area";
-      byArea.set(area, (byArea.get(area) ?? 0) + 1);
     }
     const avgAge = open.length
       ? Math.round(open.reduce((sum, i) => sum + ageInDays(i.created_at), 0) / open.length)
@@ -76,7 +78,6 @@ function InsightsPage() {
       resolved,
       avgAge,
       topCategories: [...byCategory.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6),
-      topAreas: [...byArea.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6),
       communityCount: issues.reduce((s, i) => s + i.confirmation_count, 0),
     };
   }, [issues]);
@@ -133,14 +134,22 @@ function InsightsPage() {
         </section>
 
         <section className="civic-card p-5">
-          <h2 className="text-lg font-semibold">Issues by area</h2>
+          <h2 className="text-lg font-semibold">Issues by ward</h2>
           <ul className="mt-4 space-y-2 text-sm">
-            {stats.topAreas.map(([area, count]) => (
-              <li key={area} className="flex items-center justify-between border-b border-border pb-2 last:border-0">
-                <span className="truncate pr-3">{area}</span>
-                <span className="font-medium">{count}</span>
+            {byWard.map((row) => (
+              <li
+                key={row.ward_id}
+                className="flex items-center justify-between border-b border-border pb-2 last:border-0"
+              >
+                <span className="truncate pr-3">{row.name}</span>
+                <span className="font-medium">{row.total}</span>
               </li>
             ))}
+            {byWard.length === 0 && (
+              <li className="text-muted-foreground">
+                No reports yet fall inside an imported ward boundary.
+              </li>
+            )}
           </ul>
         </section>
       </div>
