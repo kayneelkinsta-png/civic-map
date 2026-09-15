@@ -3,7 +3,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo } from "react";
 
 import { AppShell } from "@/components/AppShell";
-import { ageInDays, fetchCategories, fetchIssues } from "@/lib/civic";
+import {
+  ageInDays,
+  fetchCategories,
+  fetchInsightsSummary,
+  fetchIssues,
+} from "@/lib/civic";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/insights")({
