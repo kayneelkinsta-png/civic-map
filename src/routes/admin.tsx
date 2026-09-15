@@ -52,6 +52,31 @@ function AdminPage() {
       return data ?? [];
     },
   });
+  const { data: dataSources = [] } = useQuery({
+    queryKey: ["data-sources"],
+    enabled: isStaff,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("data_sources")
+        .select(
+          "id, organisation, dataset_name, dataset_type, source_url, licence, last_imported_at, record_count, is_active, import_status",
+        )
+        .order("organisation");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const { data: assetCount = 0 } = useQuery({
+    queryKey: ["asset-count"],
+    enabled: isStaff,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("infrastructure_assets")
+        .select("id", { count: "exact", head: true });
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
   const { data: moderation = [] } = useQuery({
     queryKey: ["moderation-actions"],
     enabled: isStaff,
