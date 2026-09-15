@@ -12,7 +12,7 @@ import { SearchBox } from "@/components/SearchBox";
 import { CivicMap } from "@/components/map/CivicMap";
 import { BASE_STYLES, type BaseStyle } from "@/components/map/MapCanvas";
 import { Button } from "@/components/ui/button";
-import { fetchCategories, fetchIssues } from "@/lib/civic";
+import { fetchAssetsInBounds, fetchCategories, fetchIssues } from "@/lib/civic";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -42,8 +42,28 @@ function MapHome() {
     null,
   );
 
+  const [view, setView] = useState<{
+    zoom: number;
+    bounds: { west: number; south: number; east: number; north: number };
+  } | null>(null);
+
   const { data: categories = [] } = useQuery({ queryKey: ["categories"], queryFn: fetchCategories });
   const { data: issues = [] } = useQuery({ queryKey: ["issues"], queryFn: fetchIssues });
+
+  // Infrastructure assets are only loaded for the current viewport, and only when
+  // zoomed in far enough for individual assets to be meaningful.
+  const assetsEnabled = (view?.zoom ?? 0) >= 15.5;
+  const boundsKey = view
+    ? [view.bounds.west, view.bounds.south, view.bounds.east, view.bounds.north]
+        .map((n) => n.toFixed(3))
+        .join(",")
+    : "";
+  const { data: assets = [] } = useQuery({
+    queryKey: ["assets", boundsKey],
+    enabled: assetsEnabled,
+    staleTime: 60_000,
+    queryFn: () => fetchAssetsInBounds(view!.bounds),
+  });
 
   const visible = useMemo(
     () => (filters.length ? issues.filter((i) => filters.includes(i.category_id)) : issues),
@@ -63,6 +83,8 @@ function MapHome() {
         selectedId={selectedId}
         onSelect={setSelectedId}
         flyTo={flyTo}
+        assets={assetsEnabled ? assets : []}
+        onViewportChange={setView}
       />
 
       {/* Top chrome */}
