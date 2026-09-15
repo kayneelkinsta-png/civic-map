@@ -11,7 +11,7 @@ import type { FeatureCollection, Point } from "geojson";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useEffect, useRef } from "react";
 
-import { SOUTHAMPTON, type Category, type Issue } from "@/lib/civic";
+import { assetMeta, SOUTHAMPTON, type Category, type InfrastructureAsset, type Issue } from "@/lib/civic";
 
 export type BaseStyle = "streets" | "minimal" | "satellite-lite";
 
@@ -32,9 +32,18 @@ type Props = {
   onPinMove?: (lat: number, lng: number) => void;
   flyTo?: { lat: number; lng: number; zoom?: number; key: number } | null;
   interactivePins?: boolean;
+  /** Infrastructure assets to show at close zoom levels. */
+  assets?: InfrastructureAsset[];
+  /** Fired (debounced by the map) whenever the viewport settles. */
+  onViewportChange?: (view: {
+    zoom: number;
+    bounds: { west: number; south: number; east: number; north: number };
+  }) => void;
 };
 
 const SRC = "civic-issues";
+const ASSET_SRC = "civic-assets";
+const ASSET_MIN_ZOOM = 15.5;
 
 export default function MapCanvas({
   issues,
@@ -46,6 +55,8 @@ export default function MapCanvas({
   onPinMove,
   flyTo,
   interactivePins = true,
+  assets = [],
+  onViewportChange,
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
