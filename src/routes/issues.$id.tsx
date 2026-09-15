@@ -411,9 +411,10 @@ function IssueDetail() {
                 <span aria-hidden>{assetMeta(asset.asset_type).emoji} </span>
                 {assetLabel(asset)}
               </p>
-              <p className="mt-1 text-xs capitalize text-muted-foreground">
-                {asset.status.replace(/_/g, " ")} · {assetReports} community report
-                {assetReports === 1 ? "" : "s"}
+              <p className="mt-1 text-xs text-muted-foreground">
+                <span className="capitalize">{asset.status.replace(/_/g, " ")}</span> ·{" "}
+                {assetReports} community report{assetReports === 1 ? "" : "s"}
+                {asset.external_asset_id ? ` · ${asset.external_asset_id}` : ""}
               </p>
               {asset.is_sample && (
                 <p className="mt-2 text-xs text-muted-foreground">Demo asset record.</p>
