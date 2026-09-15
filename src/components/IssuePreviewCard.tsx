@@ -10,7 +10,7 @@ export function IssuePreviewCard({
   onClose,
 }: {
   issue: Issue;
-  category?: Category;
+  category?: Category | undefined;
   onClose: () => void;
 }) {
   return (
