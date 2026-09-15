@@ -13,7 +13,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import {
+  assetLabel,
+  assetMeta,
   displayHandle,
+  fetchAsset,
   fetchCategories,
   fetchIssue,
   formatDate,
@@ -64,6 +67,39 @@ function IssueDetail() {
         .maybeSingle();
       if (error) throw error;
       return data;
+    },
+  });
+
+  const { data: ward } = useQuery({
+    queryKey: ["ward", issue?.ward_id],
+    enabled: !!issue?.ward_id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("wards")
+        .select("id, name")
+        .eq("id", issue!.ward_id!)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: asset } = useQuery({
+    queryKey: ["asset", issue?.asset_id],
+    enabled: !!issue?.asset_id,
+    queryFn: () => fetchAsset(issue!.asset_id!),
+  });
+
+  const { data: assetReports = 0 } = useQuery({
+    queryKey: ["asset-reports", issue?.asset_id],
+    enabled: !!issue?.asset_id,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("issues")
+        .select("id", { count: "exact", head: true })
+        .eq("asset_id", issue!.asset_id!);
+      if (error) throw error;
+      return count ?? 0;
     },
   });
 
