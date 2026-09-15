@@ -12,7 +12,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchCategories, geocode, reverseGeocode, SOUTHAMPTON, type Category } from "@/lib/civic";
+import {
+  fetchCategories,
+  geocode,
+  reverseGeocode,
+  reversePostcode,
+  SOUTHAMPTON,
+  type Category,
+} from "@/lib/civic";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/report")({
@@ -48,6 +55,8 @@ function ReportPage() {
     null,
   );
   const [address, setAddress] = useState("");
+  const [postcode, setPostcode] = useState<string | null>(null);
+  const [accuracy, setAccuracy] = useState<"gps" | "postcode_search" | "map_pin">("map_pin");
   const [search, setSearch] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
