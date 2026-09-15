@@ -170,11 +170,12 @@ export async function geocode(
   ).catch(() => null);
   if (!res?.ok) return null;
   const rows = (await res.json()) as Array<{ lat: string; lon: string; display_name: string }>;
-  if (!rows.length) return null;
+  const hit = rows[0];
+  if (!hit) return null;
   return {
-    lat: Number(rows[0].lat),
-    lng: Number(rows[0].lon),
-    label: rows[0].display_name.split(",").slice(0, 2).join(", "),
+    lat: Number(hit.lat),
+    lng: Number(hit.lon),
+    label: hit.display_name.split(",").slice(0, 2).join(", "),
   };
 }
 
