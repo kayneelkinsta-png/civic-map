@@ -43,6 +43,10 @@ function Stat({ label, value, hint }: { label: string; value: string; hint?: str
 function InsightsPage() {
   const { data: issues = [] } = useQuery({ queryKey: ["issues"], queryFn: fetchIssues });
   const { data: categories = [] } = useQuery({ queryKey: ["categories"], queryFn: fetchCategories });
+  const { data: summary } = useQuery({
+    queryKey: ["insights-summary"],
+    queryFn: fetchInsightsSummary,
+  });
   const { data: confirmations = 0 } = useQuery({
     queryKey: ["confirmation-total"],
     queryFn: async () => {
