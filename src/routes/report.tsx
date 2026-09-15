@@ -143,6 +143,8 @@ function ReportPage() {
           address_text: address.trim() || null,
           latitude: pin.lat,
           longitude: pin.lng,
+          postcode,
+          location_accuracy: accuracy,
         })
         .select("id")
         .single();
@@ -247,7 +249,9 @@ function ReportPage() {
                 pin={pin}
                 onPinMove={async (lat, lng) => {
                   setPin({ lat, lng });
+                  setAccuracy("map_pin");
                   setAddress((await reverseGeocode(lat, lng)) ?? "");
+                  setPostcode(await reversePostcode(lat, lng));
                 }}
                 flyTo={flyTo}
               />
