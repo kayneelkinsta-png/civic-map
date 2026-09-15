@@ -256,6 +256,13 @@ export default function MapCanvas({
     src?.setData(dataRef.current);
   }, [issues, selectedId, categories]);
 
+  // Asset updates
+  useEffect(() => {
+    const map = mapRef.current;
+    const src = map?.getSource(ASSET_SRC) as GeoJSONSource | undefined;
+    src?.setData(assetDataRef.current);
+  }, [assets]);
+
   // Base style switching
   useEffect(() => {
     const map = mapRef.current;
