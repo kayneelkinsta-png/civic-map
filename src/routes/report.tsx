@@ -79,7 +79,10 @@ function ReportPage() {
   }
 
   async function useMyLocation() {
-    if (!navigator.geolocation) return toast.error("Location isn't available on this device.");
+    if (!navigator.geolocation) {
+      toast.error("Location isn't available on this device.");
+      return;
+    }
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const next = { lat: pos.coords.latitude, lng: pos.coords.longitude };
@@ -94,7 +97,10 @@ function ReportPage() {
 
   async function runSearch() {
     const hit = await geocode(search);
-    if (!hit) return toast.error("We couldn't find that postcode or place.");
+    if (!hit) {
+      toast.error("We couldn't find that postcode or place.");
+      return;
+    }
     setPin({ lat: hit.lat, lng: hit.lng });
     setFlyTo({ lat: hit.lat, lng: hit.lng, zoom: 17, key: Date.now() });
     setAddress(hit.label);
