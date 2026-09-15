@@ -67,11 +67,8 @@ function InsightsPage() {
     const open = issues.filter((i) => i.status !== "RESOLVED");
     const resolved = issues.filter((i) => i.status === "RESOLVED");
     const byCategory = new Map<string, number>();
-    const byArea = new Map<string, number>();
     for (const issue of issues) {
       byCategory.set(issue.category_id, (byCategory.get(issue.category_id) ?? 0) + 1);
-      const area = issue.address_text?.split(",")[0]?.trim() ?? "Unknown area";
-      byArea.set(area, (byArea.get(area) ?? 0) + 1);
     }
     const avgAge = open.length
       ? Math.round(open.reduce((sum, i) => sum + ageInDays(i.created_at), 0) / open.length)
@@ -81,7 +78,6 @@ function InsightsPage() {
       resolved,
       avgAge,
       topCategories: [...byCategory.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6),
-      topAreas: [...byArea.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6),
       communityCount: issues.reduce((s, i) => s + i.confirmation_count, 0),
     };
   }, [issues]);
