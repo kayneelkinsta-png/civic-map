@@ -3,7 +3,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo } from "react";
 
 import { AppShell } from "@/components/AppShell";
-import { ageInDays, fetchCategories, fetchIssues } from "@/lib/civic";
+import {
+  ageInDays,
+  fetchCategories,
+  fetchInsightsSummary,
+  fetchIssues,
+} from "@/lib/civic";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/insights")({
@@ -38,6 +43,10 @@ function Stat({ label, value, hint }: { label: string; value: string; hint?: str
 function InsightsPage() {
   const { data: issues = [] } = useQuery({ queryKey: ["issues"], queryFn: fetchIssues });
   const { data: categories = [] } = useQuery({ queryKey: ["categories"], queryFn: fetchCategories });
+  const { data: summary } = useQuery({
+    queryKey: ["insights-summary"],
+    queryFn: fetchInsightsSummary,
+  });
   const { data: confirmations = 0 } = useQuery({
     queryKey: ["confirmation-total"],
     queryFn: async () => {
@@ -136,16 +145,29 @@ function InsightsPage() {
         </section>
       </div>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+      <div className="mt-4 grid gap-4 sm:grid-cols-3">
         <Stat
           label="Community confirmations"
           value={String(confirmations)}
-          hint="Times residents pressed “Still a problem”"
+          hint="Times residents pressed “Still a problem”, including demo data"
         />
         <Stat
-          label="Recorded confirmations on issues"
-          value={String(stats.communityCount)}
-          hint="Includes demo data during development"
+          label="Median age of open issues"
+          value={
+            summary?.median_age_days != null
+              ? `${Math.round(Number(summary.median_age_days))} days`
+              : "—"
+          }
+          hint="Half of open issues are older than this"
+        />
+        <Stat
+          label="Median time to resolved"
+          value={
+            summary?.median_resolution_days != null
+              ? `${Math.round(Number(summary.median_resolution_days))} days`
+              : "Not enough data"
+          }
+          hint="Based on issues marked resolved on CivicLense"
         />
       </div>
     </AppShell>

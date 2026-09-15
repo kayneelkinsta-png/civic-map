@@ -12,7 +12,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchCategories, geocode, reverseGeocode, SOUTHAMPTON, type Category } from "@/lib/civic";
+import {
+  fetchCategories,
+  geocode,
+  reverseGeocode,
+  reversePostcode,
+  SOUTHAMPTON,
+  type Category,
+} from "@/lib/civic";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/report")({
@@ -48,6 +55,8 @@ function ReportPage() {
     null,
   );
   const [address, setAddress] = useState("");
+  const [postcode, setPostcode] = useState<string | null>(null);
+  const [accuracy, setAccuracy] = useState<"gps" | "postcode_search" | "map_pin">("map_pin");
   const [search, setSearch] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -88,7 +97,9 @@ function ReportPage() {
         const next = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setPin(next);
         setFlyTo({ ...next, zoom: 17, key: Date.now() });
+        setAccuracy("gps");
         setAddress((await reverseGeocode(next.lat, next.lng)) ?? "");
+        setPostcode(await reversePostcode(next.lat, next.lng));
       },
       () => toast.error("We couldn't get your location."),
       { enableHighAccuracy: true },
@@ -104,6 +115,8 @@ function ReportPage() {
     setPin({ lat: hit.lat, lng: hit.lng });
     setFlyTo({ lat: hit.lat, lng: hit.lng, zoom: 17, key: Date.now() });
     setAddress(hit.label);
+    setAccuracy("postcode_search");
+    setPostcode(hit.postcode ?? (await reversePostcode(hit.lat, hit.lng)));
   }
 
   function pickFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -130,6 +143,8 @@ function ReportPage() {
           address_text: address.trim() || null,
           latitude: pin.lat,
           longitude: pin.lng,
+          postcode,
+          location_accuracy: accuracy,
         })
         .select("id")
         .single();
@@ -234,7 +249,9 @@ function ReportPage() {
                 pin={pin}
                 onPinMove={async (lat, lng) => {
                   setPin({ lat, lng });
+                  setAccuracy("map_pin");
                   setAddress((await reverseGeocode(lat, lng)) ?? "");
+                  setPostcode(await reversePostcode(lat, lng));
                 }}
                 flyTo={flyTo}
               />

@@ -19,11 +19,15 @@ export type Database = {
           authority_type: string
           boundary: unknown
           contact_email: string | null
+          country_id: string | null
           created_at: string
           gss_code: string | null
           id: string
+          is_active: boolean
           is_verified: boolean
           name: string
+          region_id: string | null
+          reporting_info: Json
           slug: string
           updated_at: string
           website_url: string | null
@@ -32,11 +36,15 @@ export type Database = {
           authority_type?: string
           boundary?: unknown
           contact_email?: string | null
+          country_id?: string | null
           created_at?: string
           gss_code?: string | null
           id?: string
+          is_active?: boolean
           is_verified?: boolean
           name: string
+          region_id?: string | null
+          reporting_info?: Json
           slug: string
           updated_at?: string
           website_url?: string | null
@@ -45,16 +53,197 @@ export type Database = {
           authority_type?: string
           boundary?: unknown
           contact_email?: string | null
+          country_id?: string | null
           created_at?: string
           gss_code?: string | null
           id?: string
+          is_active?: boolean
           is_verified?: boolean
           name?: string
+          region_id?: string | null
+          reporting_info?: Json
           slug?: string
           updated_at?: string
           website_url?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "authorities_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "authorities_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      countries: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
         Relationships: []
+      }
+      data_sources: {
+        Row: {
+          authority_id: string | null
+          created_at: string
+          dataset_name: string
+          dataset_type: string
+          id: string
+          import_status: string
+          is_active: boolean
+          last_imported_at: string | null
+          licence: string | null
+          notes: string | null
+          organisation: string
+          record_count: number
+          source_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          authority_id?: string | null
+          created_at?: string
+          dataset_name: string
+          dataset_type?: string
+          id?: string
+          import_status?: string
+          is_active?: boolean
+          last_imported_at?: string | null
+          licence?: string | null
+          notes?: string | null
+          organisation: string
+          record_count?: number
+          source_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          authority_id?: string | null
+          created_at?: string
+          dataset_name?: string
+          dataset_type?: string
+          id?: string
+          import_status?: string
+          is_active?: boolean
+          last_imported_at?: string | null
+          licence?: string | null
+          notes?: string | null
+          organisation?: string
+          record_count?: number
+          source_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_sources_authority_id_fkey"
+            columns: ["authority_id"]
+            isOneToOne: false
+            referencedRelation: "authorities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      infrastructure_assets: {
+        Row: {
+          asset_type: string
+          authority_id: string | null
+          created_at: string
+          external_asset_id: string | null
+          geom: unknown
+          id: string
+          is_sample: boolean
+          latitude: number
+          longitude: number
+          metadata: Json
+          name: string | null
+          source_id: string | null
+          source_updated_at: string | null
+          status: string
+          updated_at: string
+          ward_id: string | null
+        }
+        Insert: {
+          asset_type: string
+          authority_id?: string | null
+          created_at?: string
+          external_asset_id?: string | null
+          geom?: unknown
+          id?: string
+          is_sample?: boolean
+          latitude: number
+          longitude: number
+          metadata?: Json
+          name?: string | null
+          source_id?: string | null
+          source_updated_at?: string | null
+          status?: string
+          updated_at?: string
+          ward_id?: string | null
+        }
+        Update: {
+          asset_type?: string
+          authority_id?: string | null
+          created_at?: string
+          external_asset_id?: string | null
+          geom?: unknown
+          id?: string
+          is_sample?: boolean
+          latitude?: number
+          longitude?: number
+          metadata?: Json
+          name?: string | null
+          source_id?: string | null
+          source_updated_at?: string | null
+          status?: string
+          updated_at?: string
+          ward_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "infrastructure_assets_authority_id_fkey"
+            columns: ["authority_id"]
+            isOneToOne: false
+            referencedRelation: "authorities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "infrastructure_assets_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "data_sources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "infrastructure_assets_ward_id_fkey"
+            columns: ["ward_id"]
+            isOneToOne: false
+            referencedRelation: "wards"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       issue_categories: {
         Row: {
@@ -270,6 +459,7 @@ export type Database = {
       issues: {
         Row: {
           address_text: string | null
+          asset_id: string | null
           authority_id: string | null
           category_id: string
           confirmation_count: number
@@ -281,10 +471,14 @@ export type Database = {
           is_sample: boolean
           last_confirmed_at: string | null
           latitude: number
+          location_accuracy: string
           longitude: number
+          postcode: string | null
+          postcode_sector: string | null
           reference: string
           reporter_id: string | null
           resolved_at: string | null
+          severity: number
           status: Database["public"]["Enums"]["issue_status"]
           title: string
           updated_at: string
@@ -292,6 +486,7 @@ export type Database = {
         }
         Insert: {
           address_text?: string | null
+          asset_id?: string | null
           authority_id?: string | null
           category_id: string
           confirmation_count?: number
@@ -303,10 +498,14 @@ export type Database = {
           is_sample?: boolean
           last_confirmed_at?: string | null
           latitude: number
+          location_accuracy?: string
           longitude: number
+          postcode?: string | null
+          postcode_sector?: string | null
           reference?: string
           reporter_id?: string | null
           resolved_at?: string | null
+          severity?: number
           status?: Database["public"]["Enums"]["issue_status"]
           title: string
           updated_at?: string
@@ -314,6 +513,7 @@ export type Database = {
         }
         Update: {
           address_text?: string | null
+          asset_id?: string | null
           authority_id?: string | null
           category_id?: string
           confirmation_count?: number
@@ -325,16 +525,27 @@ export type Database = {
           is_sample?: boolean
           last_confirmed_at?: string | null
           latitude?: number
+          location_accuracy?: string
           longitude?: number
+          postcode?: string | null
+          postcode_sector?: string | null
           reference?: string
           reporter_id?: string | null
           resolved_at?: string | null
+          severity?: number
           status?: Database["public"]["Enums"]["issue_status"]
           title?: string
           updated_at?: string
           ward_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "issues_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "infrastructure_assets"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "issues_authority_id_fkey"
             columns: ["authority_id"]
@@ -425,6 +636,57 @@ export type Database = {
             columns: ["issue_id"]
             isOneToOne: false
             referencedRelation: "issues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      postcode_sectors: {
+        Row: {
+          authority_id: string | null
+          boundary: unknown
+          created_at: string
+          district: string
+          id: string
+          population: number | null
+          sector: string
+          updated_at: string
+          ward_id: string | null
+        }
+        Insert: {
+          authority_id?: string | null
+          boundary?: unknown
+          created_at?: string
+          district: string
+          id?: string
+          population?: number | null
+          sector: string
+          updated_at?: string
+          ward_id?: string | null
+        }
+        Update: {
+          authority_id?: string | null
+          boundary?: unknown
+          created_at?: string
+          district?: string
+          id?: string
+          population?: number | null
+          sector?: string
+          updated_at?: string
+          ward_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "postcode_sectors_authority_id_fkey"
+            columns: ["authority_id"]
+            isOneToOne: false
+            referencedRelation: "authorities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "postcode_sectors_ward_id_fkey"
+            columns: ["ward_id"]
+            isOneToOne: false
+            referencedRelation: "wards"
             referencedColumns: ["id"]
           },
         ]
@@ -545,6 +807,47 @@ export type Database = {
           },
         ]
       }
+      regions: {
+        Row: {
+          boundary: unknown
+          country_id: string
+          created_at: string
+          gss_code: string | null
+          id: string
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          boundary?: unknown
+          country_id: string
+          created_at?: string
+          gss_code?: string | null
+          id?: string
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          boundary?: unknown
+          country_id?: string
+          created_at?: string
+          gss_code?: string | null
+          id?: string
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "regions_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -613,11 +916,67 @@ export type Database = {
         }
         Returns: boolean
       }
+      insights_by_authority: {
+        Args: never
+        Returns: {
+          authority_id: string
+          name: string
+          total: number
+          unresolved: number
+        }[]
+      }
+      insights_by_category: {
+        Args: never
+        Returns: {
+          category_id: string
+          emoji: string
+          name: string
+          total: number
+          unresolved: number
+        }[]
+      }
+      insights_by_sector: {
+        Args: never
+        Returns: {
+          sector: string
+          total: number
+          unresolved: number
+        }[]
+      }
+      insights_by_ward: {
+        Args: never
+        Returns: {
+          name: string
+          total: number
+          unresolved: number
+          ward_id: string
+        }[]
+      }
+      insights_summary: {
+        Args: never
+        Returns: {
+          confirmation_total: number
+          median_age_days: number
+          median_resolution_days: number
+          resolved_reports: number
+          total_reports: number
+          unresolved_reports: number
+        }[]
+      }
+      insights_trend: {
+        Args: { _months?: number }
+        Returns: {
+          month: string
+          reported: number
+          resolved: number
+        }[]
+      }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
       resolve_authority: {
         Args: { _lat: number; _lng: number }
         Returns: string
       }
+      resolve_ward: { Args: { _lat: number; _lng: number }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "moderator" | "resident"

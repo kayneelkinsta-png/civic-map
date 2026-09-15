@@ -52,6 +52,31 @@ function AdminPage() {
       return data ?? [];
     },
   });
+  const { data: dataSources = [] } = useQuery({
+    queryKey: ["data-sources"],
+    enabled: isStaff,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("data_sources")
+        .select(
+          "id, organisation, dataset_name, dataset_type, source_url, licence, last_imported_at, record_count, is_active, import_status",
+        )
+        .order("organisation");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const { data: assetCount = 0 } = useQuery({
+    queryKey: ["asset-count"],
+    enabled: isStaff,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("infrastructure_assets")
+        .select("id", { count: "exact", head: true });
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
   const { data: moderation = [] } = useQuery({
     queryKey: ["moderation-actions"],
     enabled: isStaff,
@@ -190,11 +215,43 @@ function AdminPage() {
         </ul>
       )}
 
-      {(tab === "Users" || tab === "Data sources") && (
+      {tab === "Users" && (
         <div className="civic-card p-6 text-sm text-muted-foreground">
-          {tab === "Users"
-            ? "Resident accounts are managed in the backend user tools. Account suspension and role changes arrive in a later phase."
-            : "Authority boundary data, ward data and postcode data sources will be managed here. No boundary data has been imported yet."}
+          Resident accounts are managed in the backend user tools. Account suspension and role
+          changes arrive in a later phase.
+        </div>
+      )}
+
+      {tab === "Data sources" && (
+        <div className="space-y-2">
+          <div className="civic-card p-4 text-sm">
+            <p className="font-medium">{assetCount} infrastructure assets stored</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Assets, boundaries, wards and postcode sectors are only populated from official open
+              datasets registered below. Nothing has been imported yet.
+            </p>
+          </div>
+          {dataSources.map((s) => (
+            <div key={s.id} className="civic-card p-4">
+              <p className="font-medium">
+                {s.dataset_name}{" "}
+                <span className="text-xs font-normal text-muted-foreground">
+                  · {s.organisation}
+                </span>
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {s.dataset_type} · {s.licence ?? "licence not recorded"} · {s.record_count} records ·{" "}
+                {s.import_status.replace(/_/g, " ")} ·{" "}
+                {s.last_imported_at ? timeAgo(s.last_imported_at) : "never imported"}
+              </p>
+            </div>
+          ))}
+          {dataSources.length === 0 && (
+            <div className="civic-card p-6 text-sm text-muted-foreground">
+              No data sources registered yet. Official boundary, ward, postcode and asset datasets
+              will be registered here before import.
+            </div>
+          )}
         </div>
       )}
     </AppShell>

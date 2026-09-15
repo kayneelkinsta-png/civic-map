@@ -13,7 +13,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import {
+  assetLabel,
+  assetMeta,
   displayHandle,
+  fetchAsset,
   fetchCategories,
   fetchIssue,
   formatDate,
@@ -64,6 +67,39 @@ function IssueDetail() {
         .maybeSingle();
       if (error) throw error;
       return data;
+    },
+  });
+
+  const { data: ward } = useQuery({
+    queryKey: ["ward", issue?.ward_id],
+    enabled: !!issue?.ward_id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("wards")
+        .select("id, name")
+        .eq("id", issue!.ward_id!)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: asset } = useQuery({
+    queryKey: ["asset", issue?.asset_id],
+    enabled: !!issue?.asset_id,
+    queryFn: () => fetchAsset(issue!.asset_id!),
+  });
+
+  const { data: assetReports = 0 } = useQuery({
+    queryKey: ["asset-reports", issue?.asset_id],
+    enabled: !!issue?.asset_id,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("issues")
+        .select("id", { count: "exact", head: true })
+        .eq("asset_id", issue!.asset_id!);
+      if (error) throw error;
+      return count ?? 0;
     },
   });
 
@@ -352,7 +388,39 @@ function IssueDetail() {
             <Row label="Last confirmed" value={timeAgo(issue.last_confirmed_at)} />
             <Row label="Confirmations" value={String(issue.confirmation_count)} />
             {issue.resolved_at && <Row label="Resolved" value={formatDate(issue.resolved_at)} />}
+            {issue.resolved_at && (
+              <Row
+                label="Resolution time"
+                value={`${Math.max(
+                  1,
+                  Math.round(
+                    (new Date(issue.resolved_at).getTime() - new Date(issue.created_at).getTime()) /
+                      86400000,
+                  ),
+                )} days`}
+              />
+            )}
+            {ward?.name && <Row label="Ward" value={ward.name} />}
+            {issue.postcode_sector && <Row label="Postcode sector" value={issue.postcode_sector} />}
           </div>
+
+          {asset && (
+            <div className="civic-card p-5">
+              <h2 className="text-sm font-semibold">Linked infrastructure</h2>
+              <p className="mt-1 text-sm">
+                <span aria-hidden>{assetMeta(asset.asset_type).emoji} </span>
+                {assetLabel(asset)}
+              </p>
+              <p className="mt-1 text-xs capitalize text-muted-foreground">
+                {asset.status.replace(/_/g, " ")} · {assetReports} community report
+                {assetReports === 1 ? "" : "s"}
+              </p>
+              {asset.is_sample && (
+                <p className="mt-2 text-xs text-muted-foreground">Demo asset record.</p>
+              )}
+            </div>
+          )}
+
 
           <div className="civic-card p-5">
             <h2 className="text-sm font-semibold">Responsible authority</h2>

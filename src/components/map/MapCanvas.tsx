@@ -11,7 +11,7 @@ import type { FeatureCollection, Point } from "geojson";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useEffect, useRef } from "react";
 
-import { SOUTHAMPTON, type Category, type Issue } from "@/lib/civic";
+import { assetMeta, SOUTHAMPTON, type Category, type InfrastructureAsset, type Issue } from "@/lib/civic";
 
 export type BaseStyle = "streets" | "minimal" | "satellite-lite";
 
@@ -32,9 +32,18 @@ type Props = {
   onPinMove?: (lat: number, lng: number) => void;
   flyTo?: { lat: number; lng: number; zoom?: number; key: number } | null;
   interactivePins?: boolean;
+  /** Infrastructure assets to show at close zoom levels. */
+  assets?: InfrastructureAsset[];
+  /** Fired (debounced by the map) whenever the viewport settles. */
+  onViewportChange?: (view: {
+    zoom: number;
+    bounds: { west: number; south: number; east: number; north: number };
+  }) => void;
 };
 
 const SRC = "civic-issues";
+const ASSET_SRC = "civic-assets";
+const ASSET_MIN_ZOOM = 15.5;
 
 export default function MapCanvas({
   issues,
@@ -46,6 +55,8 @@ export default function MapCanvas({
   onPinMove,
   flyTo,
   interactivePins = true,
+  assets = [],
+  onViewportChange,
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
@@ -53,6 +64,19 @@ export default function MapCanvas({
   const dataRef = useRef<FeatureCollection>({ type: "FeatureCollection", features: [] });
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
+  const assetDataRef = useRef<FeatureCollection>({ type: "FeatureCollection", features: [] });
+  const onViewportChangeRef = useRef(onViewportChange);
+  onViewportChangeRef.current = onViewportChange;
+
+  assetDataRef.current = {
+    type: "FeatureCollection",
+    features: assets.map((asset) => ({
+      type: "Feature" as const,
+      id: asset.id,
+      geometry: { type: "Point" as const, coordinates: [asset.longitude, asset.latitude] },
+      properties: { id: asset.id, emoji: assetMeta(asset.asset_type).emoji },
+    })),
+  };
 
   // Build GeoJSON from issues
   const emojiBySlug = new Map(categories.map((c) => [c.id, c.emoji]));
@@ -92,7 +116,41 @@ export default function MapCanvas({
       "bottom-right",
     );
 
+    const emitViewport = () => {
+      const b = map.getBounds();
+      onViewportChangeRef.current?.({
+        zoom: map.getZoom(),
+        bounds: { west: b.getWest(), south: b.getSouth(), east: b.getEast(), north: b.getNorth() },
+      });
+    };
+    map.on("moveend", emitViewport);
+    map.on("load", emitViewport);
+
     const addLayers = () => {
+      if (!map.getSource(ASSET_SRC)) {
+        map.addSource(ASSET_SRC, { type: "geojson", data: assetDataRef.current });
+        map.addLayer({
+          id: "asset-dot",
+          type: "circle",
+          source: ASSET_SRC,
+          minzoom: ASSET_MIN_ZOOM,
+          paint: {
+            "circle-radius": 11,
+            "circle-color": "#ffffff",
+            "circle-opacity": 0.9,
+            "circle-stroke-width": 1.5,
+            "circle-stroke-color": "#94a3b8",
+          },
+        });
+        map.addLayer({
+          id: "asset-emoji",
+          type: "symbol",
+          source: ASSET_SRC,
+          minzoom: ASSET_MIN_ZOOM,
+          layout: { "text-field": ["get", "emoji"], "text-size": 12, "text-allow-overlap": false },
+          paint: { "text-opacity": 0.85 },
+        });
+      }
       if (map.getSource(SRC)) return;
       map.addSource(SRC, {
         type: "geojson",
@@ -197,6 +255,13 @@ export default function MapCanvas({
     const src = map?.getSource(SRC) as GeoJSONSource | undefined;
     src?.setData(dataRef.current);
   }, [issues, selectedId, categories]);
+
+  // Asset updates
+  useEffect(() => {
+    const map = mapRef.current;
+    const src = map?.getSource(ASSET_SRC) as GeoJSONSource | undefined;
+    src?.setData(assetDataRef.current);
+  }, [assets]);
 
   // Base style switching
   useEffect(() => {

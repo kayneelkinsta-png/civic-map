@@ -30,7 +30,52 @@ export type Issue = {
   category_id: string;
   authority_id: string | null;
   reporter_id: string | null;
+  ward_id: string | null;
+  postcode: string | null;
+  postcode_sector: string | null;
+  location_accuracy: string;
+  severity: number;
+  asset_id: string | null;
 };
+
+export type InfrastructureAsset = {
+  id: string;
+  asset_type: string;
+  external_asset_id: string | null;
+  name: string | null;
+  latitude: number;
+  longitude: number;
+  status: string;
+  authority_id: string | null;
+  source_id: string | null;
+  source_updated_at: string | null;
+  is_sample: boolean;
+  metadata: Record<string, unknown>;
+};
+
+export const ASSET_META: Record<string, { emoji: string; label: string }> = {
+  streetlight: { emoji: "💡", label: "Street light" },
+  bin: { emoji: "🗑️", label: "Bin" },
+  tree: { emoji: "🌳", label: "Tree" },
+  bench: { emoji: "🪑", label: "Bench" },
+  traffic_light: { emoji: "🚦", label: "Traffic light" },
+  bus_stop: { emoji: "🚏", label: "Bus stop" },
+  public_toilet: { emoji: "🚻", label: "Public toilet" },
+  road: { emoji: "🛣️", label: "Road infrastructure" },
+  council_property: { emoji: "🏛️", label: "Council property" },
+  playground: { emoji: "🛝", label: "Playground equipment" },
+  other: { emoji: "📍", label: "Public infrastructure" },
+};
+
+export function assetMeta(type: string) {
+  return ASSET_META[type] ?? ASSET_META["other"]!;
+}
+
+export function assetLabel(asset: InfrastructureAsset): string {
+  const meta = assetMeta(asset.asset_type);
+  if (asset.name) return asset.name;
+  return asset.external_asset_id ? `${meta.label} #${asset.external_asset_id}` : meta.label;
+}
 
 export const STATUS_META: Record<
   IssueStatus,
@@ -112,7 +157,7 @@ export async function fetchCategories(): Promise<Category[]> {
 }
 
 const ISSUE_FIELDS =
-  "id, reference, title, description, address_text, latitude, longitude, status, confirmation_count, last_confirmed_at, resolved_at, created_at, is_sample, category_id, authority_id, reporter_id";
+  "id, reference, title, description, address_text, latitude, longitude, status, confirmation_count, last_confirmed_at, resolved_at, created_at, is_sample, category_id, authority_id, reporter_id, ward_id, postcode, postcode_sector, location_accuracy, severity, asset_id";
 
 export async function fetchIssues(): Promise<Issue[]> {
   const { data, error } = await supabase
@@ -142,7 +187,7 @@ export async function signedPhotoUrl(path: string): Promise<string | null> {
 /** Look up a UK postcode or place name using the free postcodes.io / Nominatim services. */
 export async function geocode(
   query: string,
-): Promise<{ lat: number; lng: number; label: string } | null> {
+): Promise<{ lat: number; lng: number; label: string; postcode?: string } | null> {
   const trimmed = query.trim();
   if (!trimmed) return null;
   const postcodeLike = /^[A-Z]{1,2}\d[A-Z\d]?\s*\d?[A-Z]{0,2}$/i.test(trimmed);
@@ -160,6 +205,7 @@ export async function geocode(
           lat: json.result.latitude,
           lng: json.result.longitude,
           label: json.result.postcode,
+          postcode: json.result.postcode,
         };
       }
     }
@@ -187,4 +233,79 @@ export async function reverseGeocode(lat: number, lng: number): Promise<string |
   const json = (await res.json()) as { display_name?: string };
   if (!json.display_name) return null;
   return json.display_name.split(",").slice(0, 3).join(", ");
+}
+
+/** Nearest UK postcode for a coordinate, used to attach postcode + sector to a report. */
+export async function reversePostcode(lat: number, lng: number): Promise<string | null> {
+  const res = await fetch(
+    `https://api.postcodes.io/postcodes?lon=${lng}&lat=${lat}&limit=1&radius=500`,
+  ).catch(() => null);
+  if (!res?.ok) return null;
+  const json = (await res.json()) as { result?: Array<{ postcode: string }> | null };
+  return json.result?.[0]?.postcode ?? null;
+}
+
+const ASSET_FIELDS =
+  "id, asset_type, external_asset_id, name, latitude, longitude, status, authority_id, source_id, source_updated_at, is_sample, metadata";
+
+/** Viewport-scoped asset load. Assets are only meaningful at close zoom levels. */
+export async function fetchAssetsInBounds(bounds: {
+  west: number;
+  south: number;
+  east: number;
+  north: number;
+}): Promise<InfrastructureAsset[]> {
+  const { data, error } = await supabase
+    .from("infrastructure_assets")
+    .select(ASSET_FIELDS)
+    .gte("longitude", bounds.west)
+    .lte("longitude", bounds.east)
+    .gte("latitude", bounds.south)
+    .lte("latitude", bounds.north)
+    .limit(500);
+  if (error) throw error;
+  return (data ?? []) as InfrastructureAsset[];
+}
+
+export async function fetchAsset(id: string): Promise<InfrastructureAsset | null> {
+  const { data, error } = await supabase
+    .from("infrastructure_assets")
+    .select(ASSET_FIELDS)
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as InfrastructureAsset) ?? null;
+}
+
+export type InsightsSummary = {
+  total_reports: number;
+  unresolved_reports: number;
+  resolved_reports: number;
+  confirmation_total: number;
+  median_age_days: number | null;
+  median_resolution_days: number | null;
+};
+
+export async function fetchInsightsSummary(): Promise<InsightsSummary | null> {
+  const { data, error } = await supabase.rpc("insights_summary");
+  if (error) throw error;
+  return (data?.[0] as InsightsSummary) ?? null;
+}
+
+export async function fetchInsightsByWard() {
+  const { data, error } = await supabase.rpc("insights_by_ward");
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function fetchInsightsBySector() {
+  const { data, error } = await supabase.rpc("insights_by_sector");
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function fetchInsightsTrend(months = 12) {
+  const { data, error } = await supabase.rpc("insights_trend", { _months: months });
+  if (error) throw error;
+  return data ?? [];
 }
