@@ -97,7 +97,9 @@ function ReportPage() {
         const next = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setPin(next);
         setFlyTo({ ...next, zoom: 17, key: Date.now() });
+        setAccuracy("gps");
         setAddress((await reverseGeocode(next.lat, next.lng)) ?? "");
+        setPostcode(await reversePostcode(next.lat, next.lng));
       },
       () => toast.error("We couldn't get your location."),
       { enableHighAccuracy: true },
@@ -113,6 +115,8 @@ function ReportPage() {
     setPin({ lat: hit.lat, lng: hit.lng });
     setFlyTo({ lat: hit.lat, lng: hit.lng, zoom: 17, key: Date.now() });
     setAddress(hit.label);
+    setAccuracy("postcode_search");
+    setPostcode(hit.postcode ?? (await reversePostcode(hit.lat, hit.lng)));
   }
 
   function pickFile(e: React.ChangeEvent<HTMLInputElement>) {
