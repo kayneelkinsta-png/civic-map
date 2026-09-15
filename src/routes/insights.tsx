@@ -145,16 +145,29 @@ function InsightsPage() {
         </section>
       </div>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+      <div className="mt-4 grid gap-4 sm:grid-cols-3">
         <Stat
           label="Community confirmations"
           value={String(confirmations)}
-          hint="Times residents pressed “Still a problem”"
+          hint="Times residents pressed “Still a problem”, including demo data"
         />
         <Stat
-          label="Recorded confirmations on issues"
-          value={String(stats.communityCount)}
-          hint="Includes demo data during development"
+          label="Median age of open issues"
+          value={
+            summary?.median_age_days != null
+              ? `${Math.round(Number(summary.median_age_days))} days`
+              : "—"
+          }
+          hint="Half of open issues are older than this"
+        />
+        <Stat
+          label="Median time to resolved"
+          value={
+            summary?.median_resolution_days != null
+              ? `${Math.round(Number(summary.median_resolution_days))} days`
+              : "Not enough data"
+          }
+          hint="Based on issues marked resolved on CivicLense"
         />
       </div>
     </AppShell>
