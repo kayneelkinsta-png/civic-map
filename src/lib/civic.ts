@@ -187,7 +187,7 @@ export async function signedPhotoUrl(path: string): Promise<string | null> {
 /** Look up a UK postcode or place name using the free postcodes.io / Nominatim services. */
 export async function geocode(
   query: string,
-): Promise<{ lat: number; lng: number; label: string } | null> {
+): Promise<{ lat: number; lng: number; label: string; postcode?: string } | null> {
   const trimmed = query.trim();
   if (!trimmed) return null;
   const postcodeLike = /^[A-Z]{1,2}\d[A-Z\d]?\s*\d?[A-Z]{0,2}$/i.test(trimmed);
@@ -205,6 +205,7 @@ export async function geocode(
           lat: json.result.latitude,
           lng: json.result.longitude,
           label: json.result.postcode,
+          postcode: json.result.postcode,
         };
       }
     }
