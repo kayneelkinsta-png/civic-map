@@ -133,14 +133,22 @@ function InsightsPage() {
         </section>
 
         <section className="civic-card p-5">
-          <h2 className="text-lg font-semibold">Issues by area</h2>
+          <h2 className="text-lg font-semibold">Issues by ward</h2>
           <ul className="mt-4 space-y-2 text-sm">
-            {stats.topAreas.map(([area, count]) => (
-              <li key={area} className="flex items-center justify-between border-b border-border pb-2 last:border-0">
-                <span className="truncate pr-3">{area}</span>
-                <span className="font-medium">{count}</span>
+            {byWard.map((row) => (
+              <li
+                key={row.ward_id}
+                className="flex items-center justify-between border-b border-border pb-2 last:border-0"
+              >
+                <span className="truncate pr-3">{row.name}</span>
+                <span className="font-medium">{row.total}</span>
               </li>
             ))}
+            {byWard.length === 0 && (
+              <li className="text-muted-foreground">
+                No reports yet fall inside an imported ward boundary.
+              </li>
+            )}
           </ul>
         </section>
       </div>
