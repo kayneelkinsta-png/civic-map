@@ -234,3 +234,78 @@ export async function reverseGeocode(lat: number, lng: number): Promise<string |
   if (!json.display_name) return null;
   return json.display_name.split(",").slice(0, 3).join(", ");
 }
+
+/** Nearest UK postcode for a coordinate, used to attach postcode + sector to a report. */
+export async function reversePostcode(lat: number, lng: number): Promise<string | null> {
+  const res = await fetch(
+    `https://api.postcodes.io/postcodes?lon=${lng}&lat=${lat}&limit=1&radius=500`,
+  ).catch(() => null);
+  if (!res?.ok) return null;
+  const json = (await res.json()) as { result?: Array<{ postcode: string }> | null };
+  return json.result?.[0]?.postcode ?? null;
+}
+
+const ASSET_FIELDS =
+  "id, asset_type, external_asset_id, name, latitude, longitude, status, authority_id, source_id, source_updated_at, is_sample, metadata";
+
+/** Viewport-scoped asset load. Assets are only meaningful at close zoom levels. */
+export async function fetchAssetsInBounds(bounds: {
+  west: number;
+  south: number;
+  east: number;
+  north: number;
+}): Promise<InfrastructureAsset[]> {
+  const { data, error } = await supabase
+    .from("infrastructure_assets")
+    .select(ASSET_FIELDS)
+    .gte("longitude", bounds.west)
+    .lte("longitude", bounds.east)
+    .gte("latitude", bounds.south)
+    .lte("latitude", bounds.north)
+    .limit(500);
+  if (error) throw error;
+  return (data ?? []) as InfrastructureAsset[];
+}
+
+export async function fetchAsset(id: string): Promise<InfrastructureAsset | null> {
+  const { data, error } = await supabase
+    .from("infrastructure_assets")
+    .select(ASSET_FIELDS)
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as InfrastructureAsset) ?? null;
+}
+
+export type InsightsSummary = {
+  total_reports: number;
+  unresolved_reports: number;
+  resolved_reports: number;
+  confirmation_total: number;
+  median_age_days: number | null;
+  median_resolution_days: number | null;
+};
+
+export async function fetchInsightsSummary(): Promise<InsightsSummary | null> {
+  const { data, error } = await supabase.rpc("insights_summary");
+  if (error) throw error;
+  return (data?.[0] as InsightsSummary) ?? null;
+}
+
+export async function fetchInsightsByWard() {
+  const { data, error } = await supabase.rpc("insights_by_ward");
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function fetchInsightsBySector() {
+  const { data, error } = await supabase.rpc("insights_by_sector");
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function fetchInsightsTrend(months = 12) {
+  const { data, error } = await supabase.rpc("insights_trend", { _months: months });
+  if (error) throw error;
+  return data ?? [];
+}
