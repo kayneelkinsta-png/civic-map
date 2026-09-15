@@ -14,7 +14,9 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as InsightsRouteImport } from './routes/insights'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as ReportRouteImport } from './routes/report'
 import { Route as IssuesIndexRouteImport } from './routes/issues.index'
 import { Route as IssuesIdRouteImport } from './routes/issues.$id'
 
@@ -43,9 +45,19 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportRoute = ReportRouteImport.update({
+  id: '/report',
+  path: '/report',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IssuesIndexRoute = IssuesIndexRouteImport.update({
@@ -65,7 +77,9 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/insights': typeof InsightsRoute
   '/login': typeof LoginRoute
+  '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
+  '/report': typeof ReportRoute
   '/issues/$id': typeof IssuesIdRoute
   '/issues/': typeof IssuesIndexRoute
 }
@@ -75,7 +89,9 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/insights': typeof InsightsRoute
   '/login': typeof LoginRoute
+  '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
+  '/report': typeof ReportRoute
   '/issues/$id': typeof IssuesIdRoute
   '/issues': typeof IssuesIndexRoute
 }
@@ -86,7 +102,9 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/insights': typeof InsightsRoute
   '/login': typeof LoginRoute
+  '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
+  '/report': typeof ReportRoute
   '/issues/$id': typeof IssuesIdRoute
   '/issues/': typeof IssuesIndexRoute
 }
@@ -98,7 +116,9 @@ export interface FileRouteTypes {
     | '/admin'
     | '/insights'
     | '/login'
+    | '/profile'
     | '/register'
+    | '/report'
     | '/issues/$id'
     | '/issues/'
   fileRoutesByTo: FileRoutesByTo
@@ -108,7 +128,9 @@ export interface FileRouteTypes {
     | '/admin'
     | '/insights'
     | '/login'
+    | '/profile'
     | '/register'
+    | '/report'
     | '/issues/$id'
     | '/issues'
   id:
@@ -118,7 +140,9 @@ export interface FileRouteTypes {
     | '/admin'
     | '/insights'
     | '/login'
+    | '/profile'
     | '/register'
+    | '/report'
     | '/issues/$id'
     | '/issues/'
   fileRoutesById: FileRoutesById
@@ -129,7 +153,9 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   InsightsRoute: typeof InsightsRoute
   LoginRoute: typeof LoginRoute
+  ProfileRoute: typeof ProfileRoute
   RegisterRoute: typeof RegisterRoute
+  ReportRoute: typeof ReportRoute
   IssuesIdRoute: typeof IssuesIdRoute
   IssuesIndexRoute: typeof IssuesIndexRoute
 }
@@ -171,11 +197,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/register': {
       id: '/register'
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/report': {
+      id: '/report'
+      path: '/report'
+      fullPath: '/report'
+      preLoaderRoute: typeof ReportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/issues/': {
@@ -201,7 +241,9 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   InsightsRoute: InsightsRoute,
   LoginRoute: LoginRoute,
+  ProfileRoute: ProfileRoute,
   RegisterRoute: RegisterRoute,
+  ReportRoute: ReportRoute,
   IssuesIdRoute: IssuesIdRoute,
   IssuesIndexRoute: IssuesIndexRoute,
 }
