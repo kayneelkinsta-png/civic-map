@@ -157,7 +157,7 @@ export async function fetchCategories(): Promise<Category[]> {
 }
 
 const ISSUE_FIELDS =
-  "id, reference, title, description, address_text, latitude, longitude, status, confirmation_count, last_confirmed_at, resolved_at, created_at, is_sample, category_id, authority_id, reporter_id";
+  "id, reference, title, description, address_text, latitude, longitude, status, confirmation_count, last_confirmed_at, resolved_at, created_at, is_sample, category_id, authority_id, reporter_id, ward_id, postcode, postcode_sector, location_accuracy, severity, asset_id";
 
 export async function fetchIssues(): Promise<Issue[]> {
   const { data, error } = await supabase
