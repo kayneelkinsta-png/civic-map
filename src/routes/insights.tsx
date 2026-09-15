@@ -6,6 +6,7 @@ import { AppShell } from "@/components/AppShell";
 import {
   ageInDays,
   fetchCategories,
+  fetchInsightsByWard,
   fetchInsightsSummary,
   fetchIssues,
 } from "@/lib/civic";
