@@ -314,6 +314,62 @@ export async function fetchAsset(id: string): Promise<InfrastructureAsset | null
   return (data as InfrastructureAsset) ?? null;
 }
 
+export type NearbyAsset = {
+  id: string;
+  label: string;
+  emoji: string;
+  typeLabel: string;
+  externalId: string | null;
+  metres: number | null;
+};
+
+/**
+ * Existing assets close to a report location, offered to the resident as an
+ * optional link. Nothing is attached automatically — the resident chooses.
+ */
+export async function fetchNearbyAssets(
+  lat: number,
+  lng: number,
+  radiusMetres = 150,
+): Promise<NearbyAsset[]> {
+  const dLat = radiusMetres / 111_320;
+  const dLng = radiusMetres / (111_320 * Math.cos((lat * Math.PI) / 180) || 1);
+  const bounds = { west: lng - dLng, east: lng + dLng, south: lat - dLat, north: lat + dLat };
+
+  const [points, areas] = await Promise.all([
+    fetchAssetsInBounds(bounds).catch(() => [] as InfrastructureAsset[]),
+    fetchAreaAssetsInBounds(bounds).catch(() => [] as AreaAsset[]),
+  ]);
+
+  const pointItems: NearbyAsset[] = points.map((a) => {
+    const meta = assetMeta(a.asset_type);
+    const dy = (a.latitude - lat) * 111_320;
+    const dx = (a.longitude - lng) * 111_320 * Math.cos((lat * Math.PI) / 180);
+    return {
+      id: a.id,
+      label: assetLabel(a),
+      emoji: meta.emoji,
+      typeLabel: meta.label,
+      externalId: a.external_asset_id,
+      metres: Math.round(Math.sqrt(dx * dx + dy * dy)),
+    };
+  });
+
+  const areaItems: NearbyAsset[] = areas.map((a) => {
+    const meta = assetMeta(a.asset_type);
+    return {
+      id: a.id,
+      label: a.name ?? meta.label,
+      emoji: meta.emoji,
+      typeLabel: meta.label,
+      externalId: null,
+      metres: null,
+    };
+  });
+
+  return [...pointItems.sort((a, b) => (a.metres ?? 0) - (b.metres ?? 0)).slice(0, 8), ...areaItems.slice(0, 4)];
+}
+
 export type InsightsSummary = {
   total_reports: number;
   unresolved_reports: number;
