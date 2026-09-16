@@ -148,6 +148,7 @@ function MapHome() {
         layers={{ issues: layerVis.issues, assets: layerVis.publicAssets || layerVis.busStops }}
         onViewportChange={setView}
       />
+      )}
 
       {/* Top chrome */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-20 p-3 md:p-4">
@@ -160,6 +161,7 @@ function MapHome() {
           </div>
           <div className="pointer-events-auto min-w-0 flex-1 md:mx-auto md:max-w-md">
             <SearchBox
+              {...(config?.search_label ? { placeholder: config.search_label } : {})}
               onResult={(r) => {
                 setFlyTo({ lat: r.lat, lng: r.lng, zoom: 15.5, key: Date.now() });
               }}
