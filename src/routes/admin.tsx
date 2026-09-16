@@ -102,6 +102,20 @@ function AdminPage() {
       return count ?? 0;
     },
   });
+  const { data: destinations = [] } = useQuery({
+    queryKey: ["reporting-destinations"],
+    enabled: isStaff,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("reporting_destinations")
+        .select(
+          "id, organisation_name, service_type, reporting_method, reporting_url, api_status, is_active, source, source_url, last_verified_at",
+        )
+        .order("organisation_name");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
   const { data: moderation = [] } = useQuery({
     queryKey: ["moderation-actions"],
     enabled: isStaff,
