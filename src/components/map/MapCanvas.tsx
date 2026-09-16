@@ -43,6 +43,8 @@ type Props = {
     zoom: number;
     bounds: { west: number; south: number; east: number; north: number };
   }) => void;
+  /** Visibility toggles for the existing layer groups. Defaults: all visible. */
+  layers?: { issues?: boolean; assets?: boolean; areas?: boolean };
 };
 
 const SRC = "civic-issues";
@@ -65,6 +67,7 @@ export default function MapCanvas({
   areaAssets = [],
   onSelectAsset,
   onViewportChange,
+  layers,
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
