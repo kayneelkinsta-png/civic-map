@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 
@@ -7,6 +7,7 @@ import { StatusChip } from "@/components/StatusChip";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { runNaptanImport } from "@/lib/imports.functions";
 import { fetchCategories, fetchIssues, timeAgo } from "@/lib/civic";
 import { cn } from "@/lib/utils";
 
@@ -29,6 +30,15 @@ type Tab = (typeof TABS)[number];
 function AdminPage() {
   const { user, isStaff } = useAuth();
   const [tab, setTab] = useState<Tab>("Reports");
+  const queryClient = useQueryClient();
+
+  const naptanImport = useMutation({
+    mutationFn: () => runNaptanImport(),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["data-sources"] });
+      void queryClient.invalidateQueries({ queryKey: ["asset-count"] });
+    },
+  });
 
   const { data: issues = [] } = useQuery({
     queryKey: ["issues"],
@@ -59,7 +69,7 @@ function AdminPage() {
       const { data, error } = await supabase
         .from("data_sources")
         .select(
-          "id, organisation, dataset_name, dataset_type, source_url, licence, last_imported_at, record_count, is_active, import_status",
+          "id, organisation, dataset_name, dataset_type, source_url, licence, attribution, update_frequency, coverage, source_id_field, accessed_at, last_imported_at, record_count, is_active, import_status",
         )
         .order("organisation");
       if (error) throw error;
@@ -228,8 +238,30 @@ function AdminPage() {
             <p className="font-medium">{assetCount} infrastructure assets stored</p>
             <p className="mt-1 text-xs text-muted-foreground">
               Assets, boundaries, wards and postcode sectors are only populated from official open
-              datasets registered below. Nothing has been imported yet.
+              datasets registered below.
             </p>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={naptanImport.isPending}
+                onClick={() => naptanImport.mutate()}
+              >
+                {naptanImport.isPending ? "Importing NaPTAN…" : "Run NaPTAN bus stop import"}
+              </Button>
+              {naptanImport.isSuccess && (
+                <span className="text-xs text-muted-foreground">
+                  {naptanImport.data.inserted} added · {naptanImport.data.updated} updated ·{" "}
+                  {naptanImport.data.outside_boundary} outside boundary ·{" "}
+                  {naptanImport.data.invalid} invalid
+                </span>
+              )}
+              {naptanImport.isError && (
+                <span className="text-xs text-destructive">
+                  {(naptanImport.error as Error).message}
+                </span>
+              )}
+            </div>
           </div>
           {dataSources.map((s) => (
             <div key={s.id} className="civic-card p-4">
@@ -244,6 +276,23 @@ function AdminPage() {
                 {s.import_status.replace(/_/g, " ")} ·{" "}
                 {s.last_imported_at ? timeAgo(s.last_imported_at) : "never imported"}
               </p>
+              {(s.coverage || s.update_frequency || s.source_id_field) && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {[
+                    s.coverage,
+                    s.update_frequency ? `Updated ${s.update_frequency.toLowerCase()}` : null,
+                    s.source_id_field ? `Source ID field: ${s.source_id_field}` : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </p>
+              )}
+              {s.source_url && (
+                <p className="mt-1 break-all text-xs text-muted-foreground">{s.source_url}</p>
+              )}
+              {s.attribution && (
+                <p className="mt-1 text-xs text-muted-foreground">{s.attribution}</p>
+              )}
             </div>
           ))}
           {dataSources.length === 0 && (
