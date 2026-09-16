@@ -49,6 +49,8 @@ export type InfrastructureAsset = {
   authority_id: string | null;
   source_id: string | null;
   source_updated_at: string | null;
+  source_version: string | null;
+  geometry_type: string;
   is_sample: boolean;
   metadata: Record<string, unknown>;
   ward_id: string | null;
@@ -66,6 +68,9 @@ export const ASSET_META: Record<string, { emoji: string; label: string }> = {
   road: { emoji: "🛣️", label: "Road infrastructure" },
   council_property: { emoji: "🏛️", label: "Council property" },
   playground: { emoji: "🛝", label: "Playground equipment" },
+  park: { emoji: "🏞️", label: "Park or garden" },
+  play_area: { emoji: "🛝", label: "Play space" },
+  greenspace: { emoji: "🌿", label: "Greenspace" },
   other: { emoji: "📍", label: "Public infrastructure" },
 };
 
@@ -248,7 +253,36 @@ export async function reversePostcode(lat: number, lng: number): Promise<string 
 }
 
 const ASSET_FIELDS =
-  "id, asset_type, external_asset_id, name, latitude, longitude, status, authority_id, source_id, source_updated_at, is_sample, metadata, ward_id, postcode_sector";
+  "id, asset_type, external_asset_id, name, latitude, longitude, status, authority_id, source_id, source_updated_at, source_version, geometry_type, is_sample, metadata, ward_id, postcode_sector";
+
+export type AreaAsset = {
+  id: string;
+  name: string | null;
+  asset_type: string;
+  geojson: unknown;
+};
+
+/**
+ * Greenspace (polygon) features for the visible map area. Kept separate from
+ * point assets so the map can show areas earlier than individual street
+ * furniture without flooding the view.
+ */
+export async function fetchAreaAssetsInBounds(bounds: {
+  west: number;
+  south: number;
+  east: number;
+  north: number;
+}): Promise<AreaAsset[]> {
+  const { data, error } = await supabase.rpc("area_assets_in_bounds", {
+    _west: bounds.west,
+    _south: bounds.south,
+    _east: bounds.east,
+    _north: bounds.north,
+    _limit: 400,
+  });
+  if (error) throw error;
+  return (data ?? []) as AreaAsset[];
+}
 
 /** Viewport-scoped asset load. Assets are only meaningful at close zoom levels. */
 export async function fetchAssetsInBounds(bounds: {
@@ -264,6 +298,7 @@ export async function fetchAssetsInBounds(bounds: {
     .lte("longitude", bounds.east)
     .gte("latitude", bounds.south)
     .lte("latitude", bounds.north)
+    .eq("geometry_type", "point")
     .limit(1500);
   if (error) throw error;
   return (data ?? []) as InfrastructureAsset[];

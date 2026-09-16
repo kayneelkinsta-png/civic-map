@@ -53,12 +53,17 @@ export function AssetPreviewCard({
   });
 
   const rows: Array<[string, string]> = [];
-  if (asset.external_asset_id) rows.push(["ATCO code", asset.external_asset_id]);
+  const idLabel = asset.asset_type === "bus_stop" ? "ATCO code" : "Source reference";
+  if (asset.external_asset_id) rows.push([idLabel, asset.external_asset_id]);
   if (context?.ward) rows.push(["Ward", context.ward]);
   if (asset.postcode_sector) rows.push(["Postcode sector", asset.postcode_sector]);
-  rows.push(["Location", `${asset.latitude.toFixed(5)}, ${asset.longitude.toFixed(5)}`]);
+  rows.push([
+    asset.geometry_type === "polygon" ? "Centre point" : "Location",
+    `${asset.latitude.toFixed(5)}, ${asset.longitude.toFixed(5)}`,
+  ]);
   if (context?.authority) rows.push(["Authority", context.authority]);
   if (context?.source) rows.push(["Source", `${context.source.organisation} · ${context.source.dataset_name}`]);
+  if (asset.source_version) rows.push(["Source version", asset.source_version]);
   const updated = formatDate(asset.source_updated_at);
   if (updated) rows.push(["Last source update", updated]);
 

@@ -7,7 +7,7 @@ import { StatusChip } from "@/components/StatusChip";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { runNaptanImport } from "@/lib/imports.functions";
+import { runGreenspaceImport, runNaptanImport } from "@/lib/imports.functions";
 import { fetchCategories, fetchIssues, timeAgo } from "@/lib/civic";
 import { cn } from "@/lib/utils";
 
@@ -32,12 +32,19 @@ function AdminPage() {
   const [tab, setTab] = useState<Tab>("Reports");
   const queryClient = useQueryClient();
 
+  const invalidateImports = () => {
+    void queryClient.invalidateQueries({ queryKey: ["data-sources"] });
+    void queryClient.invalidateQueries({ queryKey: ["asset-count"] });
+  };
+
   const naptanImport = useMutation({
     mutationFn: () => runNaptanImport(),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["data-sources"] });
-      void queryClient.invalidateQueries({ queryKey: ["asset-count"] });
-    },
+    onSuccess: invalidateImports,
+  });
+
+  const greenspaceImport = useMutation({
+    mutationFn: () => runGreenspaceImport(),
+    onSuccess: invalidateImports,
   });
 
   const { data: issues = [] } = useQuery({
@@ -69,7 +76,7 @@ function AdminPage() {
       const { data, error } = await supabase
         .from("data_sources")
         .select(
-          "id, organisation, dataset_name, dataset_type, source_url, licence, attribution, update_frequency, coverage, source_id_field, accessed_at, last_imported_at, record_count, is_active, import_status",
+          "id, organisation, dataset_name, dataset_type, source_url, licence, attribution, update_frequency, coverage, source_id_field, source_version, accessed_at, last_imported_at, record_count, is_active, import_status",
         )
         .order("organisation");
       if (error) throw error;
@@ -259,6 +266,30 @@ function AdminPage() {
               {naptanImport.isError && (
                 <span className="text-xs text-destructive">
                   {(naptanImport.error as Error).message}
+                </span>
+              )}
+            </div>
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={greenspaceImport.isPending}
+                onClick={() => greenspaceImport.mutate()}
+              >
+                {greenspaceImport.isPending
+                  ? "Importing greenspace…"
+                  : "Run OS Open Greenspace import"}
+              </Button>
+              {greenspaceImport.isSuccess && (
+                <span className="text-xs text-muted-foreground">
+                  {greenspaceImport.data.inserted} added · {greenspaceImport.data.updated} updated ·{" "}
+                  {greenspaceImport.data.outside_boundary} outside boundary ·{" "}
+                  {greenspaceImport.data.invalid} invalid
+                </span>
+              )}
+              {greenspaceImport.isError && (
+                <span className="text-xs text-destructive">
+                  {(greenspaceImport.error as Error).message}
                 </span>
               )}
             </div>

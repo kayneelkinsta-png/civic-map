@@ -13,7 +13,13 @@ import { SearchBox } from "@/components/SearchBox";
 import { CivicMap } from "@/components/map/CivicMap";
 import { BASE_STYLES, type BaseStyle } from "@/components/map/MapCanvas";
 import { Button } from "@/components/ui/button";
-import { fetchAssetsInBounds, fetchCategories, fetchIssues } from "@/lib/civic";
+import {
+  fetchAreaAssetsInBounds,
+  fetchAsset,
+  fetchAssetsInBounds,
+  fetchCategories,
+  fetchIssues,
+} from "@/lib/civic";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -67,12 +73,29 @@ function MapHome() {
     queryFn: () => fetchAssetsInBounds(view!.bounds),
   });
 
+  // Greenspace areas read earlier than individual street furniture, but still
+  // only for the visible area.
+  const areasEnabled = (view?.zoom ?? 0) >= 13.5;
+  const { data: areaAssets = [] } = useQuery({
+    queryKey: ["area-assets", boundsKey],
+    enabled: areasEnabled,
+    staleTime: 60_000,
+    queryFn: () => fetchAreaAssetsInBounds(view!.bounds),
+  });
+
+  const { data: fetchedAsset = null } = useQuery({
+    queryKey: ["asset", selectedAssetId],
+    enabled: !!selectedAssetId,
+    queryFn: () => fetchAsset(selectedAssetId!),
+  });
+
   const visible = useMemo(
     () => (filters.length ? issues.filter((i) => filters.includes(i.category_id)) : issues),
     [issues, filters],
   );
   const selected = visible.find((i) => i.id === selectedId) ?? null;
-  const selectedAsset = assets.find((a) => a.id === selectedAssetId) ?? null;
+  const selectedAsset =
+    assets.find((a) => a.id === selectedAssetId) ?? (selectedAssetId ? fetchedAsset : null);
   const categoryById = useMemo(() => new Map(categories.map((c) => [c.id, c])), [categories]);
 
   const styleKeys = Object.keys(BASE_STYLES) as BaseStyle[];
@@ -94,6 +117,7 @@ function MapHome() {
         }}
         flyTo={flyTo}
         assets={assetsEnabled ? assets : []}
+        areaAssets={areasEnabled ? areaAssets : []}
         onViewportChange={setView}
       />
 

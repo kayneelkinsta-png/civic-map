@@ -126,6 +126,7 @@ export type Database = {
           record_count: number
           source_id_field: string | null
           source_url: string | null
+          source_version: string | null
           update_frequency: string | null
           updated_at: string
         }
@@ -147,6 +148,7 @@ export type Database = {
           record_count?: number
           source_id_field?: string | null
           source_url?: string | null
+          source_version?: string | null
           update_frequency?: string | null
           updated_at?: string
         }
@@ -168,6 +170,7 @@ export type Database = {
           record_count?: number
           source_id_field?: string | null
           source_url?: string | null
+          source_version?: string | null
           update_frequency?: string | null
           updated_at?: string
         }
@@ -185,9 +188,11 @@ export type Database = {
         Row: {
           asset_type: string
           authority_id: string | null
+          boundary: unknown
           created_at: string
           external_asset_id: string | null
           geom: unknown
+          geometry_type: string
           id: string
           is_sample: boolean
           latitude: number
@@ -197,6 +202,7 @@ export type Database = {
           postcode_sector: string | null
           source_id: string | null
           source_updated_at: string | null
+          source_version: string | null
           status: string
           updated_at: string
           ward_id: string | null
@@ -204,9 +210,11 @@ export type Database = {
         Insert: {
           asset_type: string
           authority_id?: string | null
+          boundary?: unknown
           created_at?: string
           external_asset_id?: string | null
           geom?: unknown
+          geometry_type?: string
           id?: string
           is_sample?: boolean
           latitude: number
@@ -216,6 +224,7 @@ export type Database = {
           postcode_sector?: string | null
           source_id?: string | null
           source_updated_at?: string | null
+          source_version?: string | null
           status?: string
           updated_at?: string
           ward_id?: string | null
@@ -223,9 +232,11 @@ export type Database = {
         Update: {
           asset_type?: string
           authority_id?: string | null
+          boundary?: unknown
           created_at?: string
           external_asset_id?: string | null
           geom?: unknown
+          geometry_type?: string
           id?: string
           is_sample?: boolean
           latitude?: number
@@ -235,6 +246,7 @@ export type Database = {
           postcode_sector?: string | null
           source_id?: string | null
           source_updated_at?: string | null
+          source_version?: string | null
           status?: string
           updated_at?: string
           ward_id?: string | null
@@ -943,12 +955,40 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      area_assets_in_bounds: {
+        Args: {
+          _east: number
+          _limit?: number
+          _north: number
+          _south: number
+          _west: number
+        }
+        Returns: {
+          asset_type: string
+          geojson: Json
+          id: string
+          name: string
+        }[]
+      }
+      authority_bng_bbox: {
+        Args: { _authority_id: string }
+        Returns: {
+          maxx: number
+          maxy: number
+          minx: number
+          miny: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      import_area_assets: {
+        Args: { _authority_id: string; _payload: Json; _source_id: string }
+        Returns: Json
       }
       import_infrastructure_assets: {
         Args: {
@@ -1020,6 +1060,10 @@ export type Database = {
         Returns: string
       }
       resolve_ward: { Args: { _lat: number; _lng: number }; Returns: string }
+      retire_missing_source_assets: {
+        Args: { _keep: string[]; _source_id: string }
+        Returns: number
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "resident"
