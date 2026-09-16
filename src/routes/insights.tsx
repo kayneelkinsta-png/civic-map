@@ -154,11 +154,16 @@ function InsightsPage() {
         </section>
       </div>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-3">
+      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat
           label="Community confirmations"
           value={String(confirmations)}
           hint="Times residents pressed “Still a problem”, including demo data"
+        />
+        <Stat
+          label="Issues with confirmations"
+          value={String(issues.filter((i) => i.confirmation_count > 0).length)}
+          hint="Issues at least one resident says are still a problem"
         />
         <Stat
           label="Median age of open issues"

@@ -115,9 +115,12 @@ function IssuesPage() {
                   </p>
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <StatusChip status={issue.status} />
-                    <span className="text-xs text-muted-foreground">
-                      ⚠️ {issue.confirmation_count} confirmed
-                    </span>
+                    {issue.confirmation_count > 0 && (
+                      <span className="rounded-full bg-signal-ack-soft px-2 py-0.5 text-[11px] font-semibold text-signal-ack">
+                        ⚠️ {issue.confirmation_count} resident
+                        {issue.confirmation_count === 1 ? "" : "s"} say this is still a problem
+                      </span>
+                    )}
                     {issue.is_sample && (
                       <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
                         Demo data
