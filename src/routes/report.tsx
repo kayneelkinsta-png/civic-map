@@ -14,11 +14,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import {
   fetchCategories,
+  fetchNearbyAssets,
   geocode,
   reverseGeocode,
   reversePostcode,
   SOUTHAMPTON,
   type Category,
+  type NearbyAsset,
 } from "@/lib/civic";
 import { cn } from "@/lib/utils";
 
@@ -63,6 +65,13 @@ function ReportPage() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [asset, setAsset] = useState<NearbyAsset | null>(null);
+
+  // Optional: existing assets near the chosen pin. Never attached automatically.
+  const { data: nearbyAssets = [] } = useQuery({
+    queryKey: ["nearby-assets", pin.lat.toFixed(4), pin.lng.toFixed(4)],
+    queryFn: () => fetchNearbyAssets(pin.lat, pin.lng),
+  });
 
   if (!user) {
     return (
@@ -145,6 +154,7 @@ function ReportPage() {
           longitude: pin.lng,
           postcode,
           location_accuracy: accuracy,
+          asset_id: asset?.id ?? null,
         })
         .select("id")
         .single();
@@ -259,6 +269,46 @@ function ReportPage() {
             <p className="text-sm text-muted-foreground">
               Drag the pin to the exact spot. {address || "No address detected yet."}
             </p>
+
+            {nearbyAssets.length > 0 && (
+              <div className="civic-card p-4">
+                <h2 className="text-sm font-semibold">Is this about a specific place or item?</h2>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Optional. Only choose one if you are sure it is the right one.
+                </p>
+                <div className="mt-3 flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAsset(null)}
+                    className={cn(
+                      "rounded-xl border border-border px-3 py-2.5 text-left text-sm",
+                      !asset && "ring-2 ring-primary",
+                    )}
+                  >
+                    Not about a specific one
+                  </button>
+                  {nearbyAssets.map((a) => (
+                    <button
+                      key={a.id}
+                      type="button"
+                      onClick={() => setAsset(a)}
+                      className={cn(
+                        "rounded-xl border border-border px-3 py-2.5 text-left text-sm",
+                        asset?.id === a.id && "ring-2 ring-primary",
+                      )}
+                    >
+                      <span aria-hidden>{a.emoji} </span>
+                      {a.label}
+                      <span className="block text-xs text-muted-foreground">
+                        {a.typeLabel}
+                        {a.externalId ? ` · ${a.externalId}` : ""}
+                        {a.metres !== null ? ` · about ${a.metres}m away` : ""}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -319,6 +369,13 @@ function ReportPage() {
             <p className="text-sm text-muted-foreground">
               {address || `${pin.lat.toFixed(5)}, ${pin.lng.toFixed(5)}`}
             </p>
+            {asset && (
+              <p className="text-sm">
+                <span aria-hidden>{asset.emoji} </span>
+                {asset.label}
+                <span className="text-muted-foreground"> · linked to this report</span>
+              </p>
+            )}
             {preview && <img src={preview} alt="Your photo" className="rounded-xl" />}
             <p className="whitespace-pre-line text-sm">{description}</p>
             <p className="text-xs text-muted-foreground">

@@ -905,6 +905,7 @@ export type Database = {
           organisation_name: string
           reporting_method: string
           reporting_url: string | null
+          requires_manual_condition: boolean
           service_type: string
           source: string | null
           source_url: string | null
@@ -923,6 +924,7 @@ export type Database = {
           organisation_name: string
           reporting_method?: string
           reporting_url?: string | null
+          requires_manual_condition?: boolean
           service_type: string
           source?: string | null
           source_url?: string | null
@@ -941,6 +943,7 @@ export type Database = {
           organisation_name?: string
           reporting_method?: string
           reporting_url?: string | null
+          requires_manual_condition?: boolean
           service_type?: string
           source?: string | null
           source_url?: string | null

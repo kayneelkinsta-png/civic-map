@@ -19,6 +19,7 @@ import {
   fetchAsset,
   fetchCategories,
   fetchIssue,
+  fetchReportingDestination,
   formatDate,
   signedPhotoUrl,
   STATUS_META,
@@ -88,6 +89,13 @@ function IssueDetail() {
     queryKey: ["asset", issue?.asset_id],
     enabled: !!issue?.asset_id,
     queryFn: () => fetchAsset(issue!.asset_id!),
+  });
+
+  // Routing lookup only. Nothing is submitted to the organisation shown.
+  const { data: destination } = useQuery({
+    queryKey: ["reporting-destination", issue?.authority_id, issue?.category_id],
+    enabled: !!issue?.category_id,
+    queryFn: () => fetchReportingDestination(issue!.authority_id, issue!.category_id),
   });
 
   const { data: assetReports = 0 } = useQuery({
@@ -431,6 +439,33 @@ function IssueDetail() {
               not seen or responded to this report.
             </p>
           </div>
+
+          {destination && (
+            <div className="civic-card p-5">
+              <h2 className="text-sm font-semibold">Official reporting route</h2>
+              <dl className="mt-2 space-y-1 text-sm">
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">Organisation</dt>
+                  <dd className="text-right font-medium">{destination.organisation_name}</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">Service</dt>
+                  <dd className="text-right">{destination.service_type}</dd>
+                </div>
+              </dl>
+              {destination.reporting_url && (
+                <Button asChild variant="outline" className="mt-4 h-12 w-full">
+                  <a href={destination.reporting_url} target="_blank" rel="noreferrer noopener">
+                    Continue to official report
+                  </a>
+                </Button>
+              )}
+              <p className="mt-3 text-xs text-muted-foreground">
+                CivicLense has recorded your community report, but this does not mean the report
+                has been submitted to the organisation shown above.
+              </p>
+            </div>
+          )}
 
           <Button
             variant="outline"
