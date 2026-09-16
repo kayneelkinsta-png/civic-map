@@ -24,7 +24,15 @@ export const Route = createFileRoute("/admin")({
   component: AdminPage,
 });
 
-const TABS = ["Reports", "Users", "Moderation", "Authorities", "Categories", "Data sources"] as const;
+const TABS = [
+  "Reports",
+  "Users",
+  "Moderation",
+  "Authorities",
+  "Categories",
+  "Data sources",
+  "Reporting destinations",
+] as const;
 type Tab = (typeof TABS)[number];
 
 function AdminPage() {
