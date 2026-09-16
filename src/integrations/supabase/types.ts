@@ -200,6 +200,8 @@ export type Database = {
           metadata: Json
           name: string | null
           postcode_sector: string | null
+          responsibility_source: string | null
+          responsible_org_id: string | null
           source_id: string | null
           source_updated_at: string | null
           source_version: string | null
@@ -222,6 +224,8 @@ export type Database = {
           metadata?: Json
           name?: string | null
           postcode_sector?: string | null
+          responsibility_source?: string | null
+          responsible_org_id?: string | null
           source_id?: string | null
           source_updated_at?: string | null
           source_version?: string | null
@@ -244,6 +248,8 @@ export type Database = {
           metadata?: Json
           name?: string | null
           postcode_sector?: string | null
+          responsibility_source?: string | null
+          responsible_org_id?: string | null
           source_id?: string | null
           source_updated_at?: string | null
           source_version?: string | null
@@ -255,6 +261,13 @@ export type Database = {
           {
             foreignKeyName: "infrastructure_assets_authority_id_fkey"
             columns: ["authority_id"]
+            isOneToOne: false
+            referencedRelation: "authorities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "infrastructure_assets_responsible_org_id_fkey"
+            columns: ["responsible_org_id"]
             isOneToOne: false
             referencedRelation: "authorities"
             referencedColumns: ["id"]
@@ -878,6 +891,78 @@ export type Database = {
           },
         ]
       }
+      reporting_destinations: {
+        Row: {
+          api_endpoint: string | null
+          api_status: string
+          authority_id: string | null
+          category_id: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          last_verified_at: string | null
+          notes: string | null
+          organisation_name: string
+          reporting_method: string
+          reporting_url: string | null
+          service_type: string
+          source: string | null
+          source_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          api_endpoint?: string | null
+          api_status?: string
+          authority_id?: string | null
+          category_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_verified_at?: string | null
+          notes?: string | null
+          organisation_name: string
+          reporting_method?: string
+          reporting_url?: string | null
+          service_type: string
+          source?: string | null
+          source_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          api_endpoint?: string | null
+          api_status?: string
+          authority_id?: string | null
+          category_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_verified_at?: string | null
+          notes?: string | null
+          organisation_name?: string
+          reporting_method?: string
+          reporting_url?: string | null
+          service_type?: string
+          source?: string | null
+          source_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reporting_destinations_authority_id_fkey"
+            columns: ["authority_id"]
+            isOneToOne: false
+            referencedRelation: "authorities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reporting_destinations_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "issue_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1058,6 +1143,20 @@ export type Database = {
       resolve_authority: {
         Args: { _lat: number; _lng: number }
         Returns: string
+      }
+      resolve_reporting_destination: {
+        Args: { _authority_id: string; _category_id: string }
+        Returns: {
+          api_status: string
+          id: string
+          last_verified_at: string
+          organisation_name: string
+          reporting_method: string
+          reporting_url: string
+          service_type: string
+          source: string
+          source_url: string
+        }[]
       }
       resolve_ward: { Args: { _lat: number; _lng: number }; Returns: string }
       retire_missing_source_assets: {

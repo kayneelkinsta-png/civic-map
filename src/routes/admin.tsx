@@ -24,7 +24,15 @@ export const Route = createFileRoute("/admin")({
   component: AdminPage,
 });
 
-const TABS = ["Reports", "Users", "Moderation", "Authorities", "Categories", "Data sources"] as const;
+const TABS = [
+  "Reports",
+  "Users",
+  "Moderation",
+  "Authorities",
+  "Categories",
+  "Data sources",
+  "Reporting destinations",
+] as const;
 type Tab = (typeof TABS)[number];
 
 function AdminPage() {
@@ -92,6 +100,20 @@ function AdminPage() {
         .select("id", { count: "exact", head: true });
       if (error) throw error;
       return count ?? 0;
+    },
+  });
+  const { data: destinations = [] } = useQuery({
+    queryKey: ["reporting-destinations"],
+    enabled: isStaff,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("reporting_destinations")
+        .select(
+          "id, organisation_name, service_type, reporting_method, reporting_url, api_status, is_active, source, source_url, last_verified_at",
+        )
+        .order("organisation_name");
+      if (error) throw error;
+      return data ?? [];
     },
   });
   const { data: moderation = [] } = useQuery({
@@ -331,6 +353,43 @@ function AdminPage() {
             <div className="civic-card p-6 text-sm text-muted-foreground">
               No data sources registered yet. Official boundary, ward, postcode and asset datasets
               will be registered here before import.
+            </div>
+          )}
+        </div>
+      )}
+      {tab === "Reporting destinations" && (
+        <div className="space-y-2">
+          <div className="civic-card p-4 text-sm text-muted-foreground">
+            Where a type of report should eventually be sent. Entries are only added when the
+            responsibility has been verified against a published source. Residents cannot edit these
+            records.
+          </div>
+          {destinations.map((d) => (
+            <div key={d.id} className="civic-card p-4">
+              <p className="font-medium">
+                {d.organisation_name}{" "}
+                <span className="text-xs font-normal text-muted-foreground">· {d.service_type}</span>
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {d.reporting_method.replace(/_/g, " ")} · API {d.api_status.replace(/_/g, " ")} ·{" "}
+                {d.is_active ? "Active" : "Inactive"} ·{" "}
+                {d.last_verified_at ? `verified ${timeAgo(d.last_verified_at)}` : "not verified"}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Source: {d.source ?? "not recorded"}
+              </p>
+              {d.reporting_url && (
+                <p className="mt-1 break-all text-xs text-muted-foreground">{d.reporting_url}</p>
+              )}
+              {d.source_url && (
+                <p className="mt-1 break-all text-xs text-muted-foreground">{d.source_url}</p>
+              )}
+            </div>
+          ))}
+          {destinations.length === 0 && (
+            <div className="civic-card p-6 text-sm text-muted-foreground">
+              No reporting destinations recorded yet. None are invented — each one is added only once
+              its organisation, method and source have been verified.
             </div>
           )}
         </div>
