@@ -346,3 +346,32 @@ export async function fetchInsightsTrend(months = 12) {
   if (error) throw error;
   return data ?? [];
 }
+
+export type ReportingDestination = {
+  id: string;
+  organisation_name: string;
+  service_type: string;
+  reporting_method: string;
+  reporting_url: string | null;
+  api_status: string;
+  source: string | null;
+  source_url: string | null;
+  last_verified_at: string | null;
+};
+
+/**
+ * Routing lookup: issue -> authority + category -> reporting destination.
+ * Returns null when no verified destination has been recorded yet.
+ * Nothing is submitted anywhere; this only exposes the routing information.
+ */
+export async function fetchReportingDestination(
+  authorityId: string | null,
+  categoryId: string | null,
+) {
+  const { data, error } = await supabase.rpc("resolve_reporting_destination", {
+    _authority_id: authorityId,
+    _category_id: categoryId,
+  });
+  if (error) throw error;
+  return ((data as ReportingDestination[] | null)?.[0] as ReportingDestination) ?? null;
+}
