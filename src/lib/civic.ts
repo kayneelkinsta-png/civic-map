@@ -1,6 +1,38 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export const SOUTHAMPTON = { lat: 50.9097, lng: -1.4044, zoom: 12.4 };
+/**
+ * Per-authority application configuration (map centre, wording, import
+ * settings). CivicLense holds no authority-specific values in code: the active
+ * authority's configuration row supplies them at runtime.
+ */
+export type AuthorityConfig = {
+  authority_id: string;
+  config_number: number;
+  display_name: string;
+  search_label: string;
+  location_fallback_label: string;
+  map_centre_lat: number;
+  map_centre_lng: number;
+  map_default_zoom: number;
+  coverage_note: string | null;
+  import_config: Record<string, unknown>;
+};
+
+const AUTHORITY_CONFIG_FIELDS =
+  "authority_id, config_number, display_name, search_label, location_fallback_label, map_centre_lat, map_centre_lng, map_default_zoom, coverage_note, import_config";
+
+/** The lowest-numbered active authority configuration (Southampton is #001). */
+export async function fetchPrimaryAuthorityConfig(): Promise<AuthorityConfig | null> {
+  const { data, error } = await supabase
+    .from("authority_configs")
+    .select(AUTHORITY_CONFIG_FIELDS)
+    .eq("is_active", true)
+    .order("config_number")
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as AuthorityConfig) ?? null;
+}
 
 export type IssueStatus = "NEW" | "ACKNOWLEDGED" | "IN_PROGRESS" | "RESOLVED" | "REOPENED";
 
