@@ -32,11 +32,12 @@ export function IssuePreviewCard({
         Reported {timeAgo(issue.created_at)}
         {issue.address_text ? ` · ${issue.address_text}` : ""}
       </p>
-      <p className="mt-2 text-sm">
-        <span aria-hidden>⚠️ </span>
-        <span className="font-medium">{issue.confirmation_count}</span> resident
-        {issue.confirmation_count === 1 ? "" : "s"} say this is still a problem
-      </p>
+      {issue.confirmation_count > 0 && (
+        <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-signal-ack-soft px-2.5 py-1 text-xs font-semibold text-signal-ack">
+          <span aria-hidden>⚠️</span> {issue.confirmation_count} resident
+          {issue.confirmation_count === 1 ? "" : "s"} say this is still a problem
+        </p>
+      )}
       <div className="mt-3 flex items-center justify-between gap-3">
         <StatusChip status={issue.status} />
         <Link
