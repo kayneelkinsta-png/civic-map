@@ -126,9 +126,12 @@ function MapHome() {
 
   return (
     <div className="relative h-[100dvh] w-full overflow-hidden">
+      {config && (
       <CivicMap
         issues={visible}
         categories={categories}
+        centre={{ lat: config.map_centre_lat, lng: config.map_centre_lng }}
+        defaultZoom={config.map_default_zoom}
         baseStyle={baseStyle}
         selectedId={selectedId}
         onSelect={(id) => {
