@@ -311,6 +311,7 @@ function AdminPage() {
                 <p className="mt-1 text-xs text-muted-foreground">
                   {[
                     s.coverage,
+                    s.source_version ? `Source version ${s.source_version}` : null,
                     s.update_frequency ? `Updated ${s.update_frequency.toLowerCase()}` : null,
                     s.source_id_field ? `Source ID field: ${s.source_id_field}` : null,
                   ]
