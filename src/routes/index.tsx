@@ -13,6 +13,7 @@ import { SearchBox } from "@/components/SearchBox";
 import { CivicMap } from "@/components/map/CivicMap";
 import { BASE_STYLES, type BaseStyle } from "@/components/map/MapCanvas";
 import { Button } from "@/components/ui/button";
+import { useAuthorityConfig } from "@/hooks/useAuthorityConfig";
 import {
   fetchAreaAssetsInBounds,
   fetchAsset,
@@ -62,6 +63,7 @@ function MapHome() {
     bounds: { west: number; south: number; east: number; north: number };
   } | null>(null);
 
+  const { config } = useAuthorityConfig();
   const { data: categories = [] } = useQuery({ queryKey: ["categories"], queryFn: fetchCategories });
   const { data: issues = [] } = useQuery({ queryKey: ["issues"], queryFn: fetchIssues });
 
