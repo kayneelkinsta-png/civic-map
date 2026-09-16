@@ -34,6 +34,8 @@ type Props = {
   interactivePins?: boolean;
   /** Infrastructure assets to show at close zoom levels. */
   assets?: InfrastructureAsset[];
+  /** Greenspace (polygon) features for the current viewport. */
+  areaAssets?: Array<{ id: string; name: string | null; asset_type: string; geojson: unknown }>;
   /** Fired (debounced by the map) whenever the viewport settles. */
   /** Fired when an infrastructure asset marker is clicked. */
   onSelectAsset?: (id: string) => void;
@@ -45,7 +47,9 @@ type Props = {
 
 const SRC = "civic-issues";
 const ASSET_SRC = "civic-assets";
+const AREA_SRC = "civic-areas";
 const ASSET_MIN_ZOOM = 15.5;
+const AREA_MIN_ZOOM = 13.5;
 
 export default function MapCanvas({
   issues,
@@ -58,6 +62,7 @@ export default function MapCanvas({
   flyTo,
   interactivePins = true,
   assets = [],
+  areaAssets = [],
   onSelectAsset,
   onViewportChange,
 }: Props) {
@@ -72,6 +77,19 @@ export default function MapCanvas({
   onSelectAssetRef.current = onSelectAsset;
   const onViewportChangeRef = useRef(onViewportChange);
   onViewportChangeRef.current = onViewportChange;
+
+  const areaDataRef = useRef<FeatureCollection>({ type: "FeatureCollection", features: [] });
+  areaDataRef.current = {
+    type: "FeatureCollection",
+    features: areaAssets
+      .filter((a) => a.geojson)
+      .map((a) => ({
+        type: "Feature" as const,
+        id: a.id,
+        geometry: a.geojson as never,
+        properties: { id: a.id },
+      })),
+  };
 
   assetDataRef.current = {
     type: "FeatureCollection",
@@ -132,6 +150,29 @@ export default function MapCanvas({
     map.on("load", emitViewport);
 
     const addLayers = () => {
+      if (!map.getSource(AREA_SRC)) {
+        map.addSource(AREA_SRC, { type: "geojson", data: areaDataRef.current });
+        map.addLayer({
+          id: "area-fill",
+          type: "fill",
+          source: AREA_SRC,
+          minzoom: AREA_MIN_ZOOM,
+          paint: { "fill-color": "#2f855a", "fill-opacity": 0.16 },
+        });
+        map.addLayer({
+          id: "area-outline",
+          type: "line",
+          source: AREA_SRC,
+          minzoom: AREA_MIN_ZOOM,
+          paint: { "line-color": "#2f855a", "line-opacity": 0.45, "line-width": 1 },
+        });
+        map.on("click", "area-fill", (e: MapLayerMouseEvent) => {
+          const f = e.features?.[0];
+          if (f) onSelectAssetRef.current?.(String(f.properties?.["id"]));
+        });
+        map.on("mouseenter", "area-fill", () => (map.getCanvas().style.cursor = "pointer"));
+        map.on("mouseleave", "area-fill", () => (map.getCanvas().style.cursor = ""));
+      }
       if (!map.getSource(ASSET_SRC)) {
         map.addSource(ASSET_SRC, { type: "geojson", data: assetDataRef.current });
         map.addLayer({
@@ -276,6 +317,13 @@ export default function MapCanvas({
     const src = map?.getSource(ASSET_SRC) as GeoJSONSource | undefined;
     src?.setData(assetDataRef.current);
   }, [assets]);
+
+  // Greenspace area updates
+  useEffect(() => {
+    const map = mapRef.current;
+    const src = map?.getSource(AREA_SRC) as GeoJSONSource | undefined;
+    src?.setData(areaDataRef.current);
+  }, [areaAssets]);
 
   // Base style switching
   useEffect(() => {
