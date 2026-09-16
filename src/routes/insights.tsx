@@ -52,16 +52,6 @@ function InsightsPage() {
     queryKey: ["insights-by-ward"],
     queryFn: fetchInsightsByWard,
   });
-  const { data: confirmations = 0 } = useQuery({
-    queryKey: ["confirmation-total"],
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from("issue_confirmations")
-        .select("id", { count: "exact", head: true });
-      if (error) throw error;
-      return count ?? 0;
-    },
-  });
 
   const stats = useMemo(() => {
     const open = issues.filter((i) => i.status !== "RESOLVED");
@@ -157,7 +147,7 @@ function InsightsPage() {
       <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat
           label="Community confirmations"
-          value={String(confirmations)}
+          value={String(stats.communityCount)}
           hint="Times residents pressed “Still a problem”, including demo data"
         />
         <Stat
