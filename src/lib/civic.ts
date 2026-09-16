@@ -51,6 +51,8 @@ export type InfrastructureAsset = {
   source_updated_at: string | null;
   is_sample: boolean;
   metadata: Record<string, unknown>;
+  ward_id: string | null;
+  postcode_sector: string | null;
 };
 
 export const ASSET_META: Record<string, { emoji: string; label: string }> = {
@@ -246,7 +248,7 @@ export async function reversePostcode(lat: number, lng: number): Promise<string 
 }
 
 const ASSET_FIELDS =
-  "id, asset_type, external_asset_id, name, latitude, longitude, status, authority_id, source_id, source_updated_at, is_sample, metadata";
+  "id, asset_type, external_asset_id, name, latitude, longitude, status, authority_id, source_id, source_updated_at, is_sample, metadata, ward_id, postcode_sector";
 
 /** Viewport-scoped asset load. Assets are only meaningful at close zoom levels. */
 export async function fetchAssetsInBounds(bounds: {
@@ -262,7 +264,7 @@ export async function fetchAssetsInBounds(bounds: {
     .lte("longitude", bounds.east)
     .gte("latitude", bounds.south)
     .lte("latitude", bounds.north)
-    .limit(500);
+    .limit(1500);
   if (error) throw error;
   return (data ?? []) as InfrastructureAsset[];
 }

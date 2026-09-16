@@ -6,6 +6,7 @@ import { Layers } from "lucide-react";
 import { AccountButton } from "@/components/AccountButton";
 import { BottomNav } from "@/components/BottomNav";
 import { CategoryFilters } from "@/components/CategoryFilters";
+import { AssetPreviewCard } from "@/components/AssetPreviewCard";
 import { IssuePreviewCard } from "@/components/IssuePreviewCard";
 import { Logo } from "@/components/Logo";
 import { SearchBox } from "@/components/SearchBox";
@@ -36,6 +37,7 @@ export const Route = createFileRoute("/")({
 
 function MapHome() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
   const [filters, setFilters] = useState<string[]>([]);
   const [baseStyle, setBaseStyle] = useState<BaseStyle>("minimal");
   const [flyTo, setFlyTo] = useState<{ lat: number; lng: number; zoom?: number; key: number } | null>(
@@ -70,6 +72,7 @@ function MapHome() {
     [issues, filters],
   );
   const selected = visible.find((i) => i.id === selectedId) ?? null;
+  const selectedAsset = assets.find((a) => a.id === selectedAssetId) ?? null;
   const categoryById = useMemo(() => new Map(categories.map((c) => [c.id, c])), [categories]);
 
   const styleKeys = Object.keys(BASE_STYLES) as BaseStyle[];
@@ -81,7 +84,14 @@ function MapHome() {
         categories={categories}
         baseStyle={baseStyle}
         selectedId={selectedId}
-        onSelect={setSelectedId}
+        onSelect={(id) => {
+          setSelectedId(id);
+          if (id) setSelectedAssetId(null);
+        }}
+        onSelectAsset={(id) => {
+          setSelectedAssetId(id);
+          setSelectedId(null);
+        }}
         flyTo={flyTo}
         assets={assetsEnabled ? assets : []}
         onViewportChange={setView}
@@ -141,6 +151,11 @@ function MapHome() {
       {/* Bottom chrome */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 space-y-3 p-3 pb-20 md:p-4 md:pb-6">
         <div className="mx-auto max-w-6xl">
+          {selectedAsset && (
+            <div className="pointer-events-auto mb-3 max-w-md">
+              <AssetPreviewCard asset={selectedAsset} onClose={() => setSelectedAssetId(null)} />
+            </div>
+          )}
           {selected && (
             <div className="pointer-events-auto mb-3 max-w-md">
               <IssuePreviewCard

@@ -35,6 +35,8 @@ type Props = {
   /** Infrastructure assets to show at close zoom levels. */
   assets?: InfrastructureAsset[];
   /** Fired (debounced by the map) whenever the viewport settles. */
+  /** Fired when an infrastructure asset marker is clicked. */
+  onSelectAsset?: (id: string) => void;
   onViewportChange?: (view: {
     zoom: number;
     bounds: { west: number; south: number; east: number; north: number };
@@ -56,6 +58,7 @@ export default function MapCanvas({
   flyTo,
   interactivePins = true,
   assets = [],
+  onSelectAsset,
   onViewportChange,
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -65,6 +68,8 @@ export default function MapCanvas({
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
   const assetDataRef = useRef<FeatureCollection>({ type: "FeatureCollection", features: [] });
+  const onSelectAssetRef = useRef(onSelectAsset);
+  onSelectAssetRef.current = onSelectAsset;
   const onViewportChangeRef = useRef(onViewportChange);
   onViewportChangeRef.current = onViewportChange;
 
@@ -216,6 +221,15 @@ export default function MapCanvas({
           "text-allow-overlap": true,
         },
       });
+
+      for (const layer of ["asset-dot", "asset-emoji"]) {
+        map.on("click", layer, (e: MapLayerMouseEvent) => {
+          const f = e.features?.[0];
+          if (f) onSelectAssetRef.current?.(String(f.properties?.["id"]));
+        });
+        map.on("mouseenter", layer, () => (map.getCanvas().style.cursor = "pointer"));
+        map.on("mouseleave", layer, () => (map.getCanvas().style.cursor = ""));
+      }
 
       if (!interactivePins) return;
 
