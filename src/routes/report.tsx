@@ -14,11 +14,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import {
   fetchCategories,
+  fetchNearbyAssets,
   geocode,
   reverseGeocode,
   reversePostcode,
   SOUTHAMPTON,
   type Category,
+  type NearbyAsset,
 } from "@/lib/civic";
 import { cn } from "@/lib/utils";
 
@@ -63,6 +65,13 @@ function ReportPage() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [asset, setAsset] = useState<NearbyAsset | null>(null);
+
+  // Optional: existing assets near the chosen pin. Never attached automatically.
+  const { data: nearbyAssets = [] } = useQuery({
+    queryKey: ["nearby-assets", pin.lat.toFixed(4), pin.lng.toFixed(4)],
+    queryFn: () => fetchNearbyAssets(pin.lat, pin.lng),
+  });
 
   if (!user) {
     return (
