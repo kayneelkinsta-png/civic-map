@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Layers } from "lucide-react";
+import { Check, Layers } from "lucide-react";
 
 import { AccountButton } from "@/components/AccountButton";
 import { BottomNav } from "@/components/BottomNav";
@@ -46,6 +46,13 @@ function MapHome() {
   const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
   const [filters, setFilters] = useState<string[]>([]);
   const [baseStyle, setBaseStyle] = useState<BaseStyle>("minimal");
+  // Layer visibility — defaults preserve the current map appearance.
+  const [layerVis, setLayerVis] = useState({
+    issues: true,
+    publicAssets: true,
+    busStops: true,
+    greenspace: true,
+  });
   const [flyTo, setFlyTo] = useState<{ lat: number; lng: number; zoom?: number; key: number } | null>(
     null,
   );
@@ -100,6 +107,21 @@ function MapHome() {
 
   const styleKeys = Object.keys(BASE_STYLES) as BaseStyle[];
 
+  // Same existing asset layer; the toggles only filter which records feed it.
+  const mapAssets = useMemo(
+    () =>
+      assets.filter((a) =>
+        a.asset_type === "bus_stop" ? layerVis.busStops : layerVis.publicAssets,
+      ),
+    [assets, layerVis.busStops, layerVis.publicAssets],
+  );
+  const layerToggles: Array<{ key: keyof typeof layerVis; label: string }> = [
+    { key: "issues", label: "Issues" },
+    { key: "publicAssets", label: "Public assets" },
+    { key: "busStops", label: "Bus stops" },
+    { key: "greenspace", label: "Greenspace" },
+  ];
+
   return (
     <div className="relative h-[100dvh] w-full overflow-hidden">
       <CivicMap
@@ -116,8 +138,9 @@ function MapHome() {
           setSelectedId(null);
         }}
         flyTo={flyTo}
-        assets={assetsEnabled ? assets : []}
-        areaAssets={areasEnabled ? areaAssets : []}
+        assets={assetsEnabled ? mapAssets : []}
+        areaAssets={areasEnabled && layerVis.greenspace ? areaAssets : []}
+        layers={{ issues: layerVis.issues, assets: layerVis.publicAssets || layerVis.busStops }}
         onViewportChange={setView}
       />
 
@@ -169,6 +192,31 @@ function MapHome() {
               {BASE_STYLES[key].label}
             </button>
           ))}
+          <span className="flex h-8 items-center border-t border-border px-2.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            Community
+          </span>
+          {layerToggles.map(({ key, label }) => {
+            const on = layerVis[key];
+            return (
+              <button
+                key={key}
+                type="button"
+                aria-pressed={on}
+                onClick={() => setLayerVis((prev) => ({ ...prev, [key]: !prev[key] }))}
+                className="flex items-center gap-2 px-3 py-2 text-left text-xs font-medium transition-colors hover:bg-secondary"
+              >
+                <span
+                  className={
+                    "flex h-4 w-4 items-center justify-center rounded border " +
+                    (on ? "border-primary bg-primary text-primary-foreground" : "border-border")
+                  }
+                >
+                  {on && <Check className="h-3 w-3" />}
+                </span>
+                <span className={on ? "" : "text-muted-foreground"}>{label}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 

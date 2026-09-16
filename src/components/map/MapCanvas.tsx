@@ -43,6 +43,8 @@ type Props = {
     zoom: number;
     bounds: { west: number; south: number; east: number; north: number };
   }) => void;
+  /** Visibility toggles for the existing layer groups. Defaults: all visible. */
+  layers?: { issues?: boolean; assets?: boolean; areas?: boolean };
 };
 
 const SRC = "civic-issues";
@@ -65,6 +67,7 @@ export default function MapCanvas({
   areaAssets = [],
   onSelectAsset,
   onViewportChange,
+  layers,
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
@@ -324,6 +327,29 @@ export default function MapCanvas({
     const src = map?.getSource(AREA_SRC) as GeoJSONSource | undefined;
     src?.setData(areaDataRef.current);
   }, [areaAssets]);
+
+  // Layer group visibility (re-applied after base-style switches re-add layers)
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const apply = () => {
+      const set = (ids: string[], visible: boolean) => {
+        for (const id of ids) {
+          if (map.getLayer(id)) {
+            map.setLayoutProperty(id, "visibility", visible ? "visible" : "none");
+          }
+        }
+      };
+      set(["clusters", "cluster-count", "pin-halo", "pin-emoji"], layers?.issues ?? true);
+      set(["asset-dot", "asset-emoji"], layers?.assets ?? true);
+      set(["area-fill", "area-outline"], layers?.areas ?? true);
+    };
+    apply();
+    map.on("styledata", apply);
+    return () => {
+      map.off("styledata", apply);
+    };
+  }, [layers?.issues, layers?.assets, layers?.areas]);
 
   // Base style switching
   useEffect(() => {
