@@ -7,6 +7,7 @@ import { StatusChip } from "@/components/StatusChip";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthorityConfig } from "@/hooks/useAuthorityConfig";
 import { displayHandle, timeAgo, type Issue } from "@/lib/civic";
 import { cn } from "@/lib/utils";
 
