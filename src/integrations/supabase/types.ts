@@ -109,7 +109,10 @@ export type Database = {
       }
       data_sources: {
         Row: {
+          accessed_at: string | null
+          attribution: string | null
           authority_id: string | null
+          coverage: string | null
           created_at: string
           dataset_name: string
           dataset_type: string
@@ -121,11 +124,16 @@ export type Database = {
           notes: string | null
           organisation: string
           record_count: number
+          source_id_field: string | null
           source_url: string | null
+          update_frequency: string | null
           updated_at: string
         }
         Insert: {
+          accessed_at?: string | null
+          attribution?: string | null
           authority_id?: string | null
+          coverage?: string | null
           created_at?: string
           dataset_name: string
           dataset_type?: string
@@ -137,11 +145,16 @@ export type Database = {
           notes?: string | null
           organisation: string
           record_count?: number
+          source_id_field?: string | null
           source_url?: string | null
+          update_frequency?: string | null
           updated_at?: string
         }
         Update: {
+          accessed_at?: string | null
+          attribution?: string | null
           authority_id?: string | null
+          coverage?: string | null
           created_at?: string
           dataset_name?: string
           dataset_type?: string
@@ -153,7 +166,9 @@ export type Database = {
           notes?: string | null
           organisation?: string
           record_count?: number
+          source_id_field?: string | null
           source_url?: string | null
+          update_frequency?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -179,6 +194,7 @@ export type Database = {
           longitude: number
           metadata: Json
           name: string | null
+          postcode_sector: string | null
           source_id: string | null
           source_updated_at: string | null
           status: string
@@ -197,6 +213,7 @@ export type Database = {
           longitude: number
           metadata?: Json
           name?: string | null
+          postcode_sector?: string | null
           source_id?: string | null
           source_updated_at?: string | null
           status?: string
@@ -215,6 +232,7 @@ export type Database = {
           longitude?: number
           metadata?: Json
           name?: string | null
+          postcode_sector?: string | null
           source_id?: string | null
           source_updated_at?: string | null
           status?: string
@@ -931,6 +949,15 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      import_infrastructure_assets: {
+        Args: {
+          _asset_type: string
+          _authority_id: string
+          _payload: Json
+          _source_id: string
+        }
+        Returns: Json
       }
       insights_by_authority: {
         Args: never
