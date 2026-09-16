@@ -369,8 +369,8 @@ export async function fetchReportingDestination(
   categoryId: string | null,
 ) {
   const { data, error } = await supabase.rpc("resolve_reporting_destination", {
-    _authority_id: authorityId,
-    _category_id: categoryId,
+    _authority_id: authorityId as string,
+    _category_id: categoryId as string,
   });
   if (error) throw error;
   return ((data as ReportingDestination[] | null)?.[0] as ReportingDestination) ?? null;
