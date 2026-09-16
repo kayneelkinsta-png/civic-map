@@ -18,6 +18,10 @@ export type Database = {
         Row: {
           authority_type: string
           boundary: unknown
+          boundary_effective_from: string | null
+          boundary_imported_at: string | null
+          boundary_source_id: string | null
+          boundary_source_version: string | null
           contact_email: string | null
           country_id: string | null
           created_at: string
@@ -35,6 +39,10 @@ export type Database = {
         Insert: {
           authority_type?: string
           boundary?: unknown
+          boundary_effective_from?: string | null
+          boundary_imported_at?: string | null
+          boundary_source_id?: string | null
+          boundary_source_version?: string | null
           contact_email?: string | null
           country_id?: string | null
           created_at?: string
@@ -52,6 +60,10 @@ export type Database = {
         Update: {
           authority_type?: string
           boundary?: unknown
+          boundary_effective_from?: string | null
+          boundary_imported_at?: string | null
+          boundary_source_id?: string | null
+          boundary_source_version?: string | null
           contact_email?: string | null
           country_id?: string | null
           created_at?: string
@@ -68,6 +80,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "authorities_boundary_source_id_fkey"
+            columns: ["boundary_source_id"]
+            isOneToOne: false
+            referencedRelation: "data_sources"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "authorities_country_id_fkey"
             columns: ["country_id"]
             isOneToOne: false
@@ -79,6 +98,65 @@ export type Database = {
             columns: ["region_id"]
             isOneToOne: false
             referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      authority_configs: {
+        Row: {
+          authority_id: string
+          config_number: number
+          coverage_note: string | null
+          created_at: string
+          display_name: string
+          id: string
+          import_config: Json
+          is_active: boolean
+          location_fallback_label: string
+          map_centre_lat: number
+          map_centre_lng: number
+          map_default_zoom: number
+          search_label: string
+          updated_at: string
+        }
+        Insert: {
+          authority_id: string
+          config_number: number
+          coverage_note?: string | null
+          created_at?: string
+          display_name: string
+          id?: string
+          import_config?: Json
+          is_active?: boolean
+          location_fallback_label: string
+          map_centre_lat: number
+          map_centre_lng: number
+          map_default_zoom: number
+          search_label: string
+          updated_at?: string
+        }
+        Update: {
+          authority_id?: string
+          config_number?: number
+          coverage_note?: string | null
+          created_at?: string
+          display_name?: string
+          id?: string
+          import_config?: Json
+          is_active?: boolean
+          location_fallback_label?: string
+          map_centre_lat?: number
+          map_centre_lng?: number
+          map_default_zoom?: number
+          search_label?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "authority_configs_authority_id_fkey"
+            columns: ["authority_id"]
+            isOneToOne: true
+            referencedRelation: "authorities"
             referencedColumns: ["id"]
           },
         ]
@@ -199,6 +277,8 @@ export type Database = {
           longitude: number
           metadata: Json
           name: string | null
+          owner_org_id: string | null
+          ownership_source: string | null
           postcode_sector: string | null
           responsibility_source: string | null
           responsible_org_id: string | null
@@ -223,6 +303,8 @@ export type Database = {
           longitude: number
           metadata?: Json
           name?: string | null
+          owner_org_id?: string | null
+          ownership_source?: string | null
           postcode_sector?: string | null
           responsibility_source?: string | null
           responsible_org_id?: string | null
@@ -247,6 +329,8 @@ export type Database = {
           longitude?: number
           metadata?: Json
           name?: string | null
+          owner_org_id?: string | null
+          ownership_source?: string | null
           postcode_sector?: string | null
           responsibility_source?: string | null
           responsible_org_id?: string | null
@@ -263,6 +347,13 @@ export type Database = {
             columns: ["authority_id"]
             isOneToOne: false
             referencedRelation: "authorities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "infrastructure_assets_owner_org_id_fkey"
+            columns: ["owner_org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
             referencedColumns: ["id"]
           },
           {
@@ -683,6 +774,53 @@ export type Database = {
           },
         ]
       }
+      organisations: {
+        Row: {
+          authority_id: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          notes: string | null
+          organisation_type: Database["public"]["Enums"]["organisation_type"]
+          slug: string
+          updated_at: string
+          website_url: string | null
+        }
+        Insert: {
+          authority_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          notes?: string | null
+          organisation_type?: Database["public"]["Enums"]["organisation_type"]
+          slug: string
+          updated_at?: string
+          website_url?: string | null
+        }
+        Update: {
+          authority_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          notes?: string | null
+          organisation_type?: Database["public"]["Enums"]["organisation_type"]
+          slug?: string
+          updated_at?: string
+          website_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organisations_authority_id_fkey"
+            columns: ["authority_id"]
+            isOneToOne: false
+            referencedRelation: "authorities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       postcode_sectors: {
         Row: {
           authority_id: string | null
@@ -902,6 +1040,7 @@ export type Database = {
           is_active: boolean
           last_verified_at: string | null
           notes: string | null
+          organisation_id: string | null
           organisation_name: string
           reporting_method: string
           reporting_url: string | null
@@ -921,6 +1060,7 @@ export type Database = {
           is_active?: boolean
           last_verified_at?: string | null
           notes?: string | null
+          organisation_id?: string | null
           organisation_name: string
           reporting_method?: string
           reporting_url?: string | null
@@ -940,6 +1080,7 @@ export type Database = {
           is_active?: boolean
           last_verified_at?: string | null
           notes?: string | null
+          organisation_id?: string | null
           organisation_name?: string
           reporting_method?: string
           reporting_url?: string | null
@@ -962,6 +1103,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "issue_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reporting_destinations_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
             referencedColumns: ["id"]
           },
         ]
@@ -991,7 +1139,11 @@ export type Database = {
         Row: {
           authority_id: string
           boundary: unknown
+          code_type: string | null
           created_at: string
+          effective_from: string | null
+          effective_to: string | null
+          geography_type: string
           gss_code: string | null
           id: string
           name: string
@@ -1002,7 +1154,11 @@ export type Database = {
         Insert: {
           authority_id: string
           boundary?: unknown
+          code_type?: string | null
           created_at?: string
+          effective_from?: string | null
+          effective_to?: string | null
+          geography_type?: string
           gss_code?: string | null
           id?: string
           name: string
@@ -1013,7 +1169,11 @@ export type Database = {
         Update: {
           authority_id?: string
           boundary?: unknown
+          code_type?: string | null
           created_at?: string
+          effective_from?: string | null
+          effective_to?: string | null
+          geography_type?: string
           gss_code?: string | null
           id?: string
           name?: string
@@ -1175,6 +1335,16 @@ export type Database = {
         | "IN_PROGRESS"
         | "RESOLVED"
         | "REOPENED"
+      organisation_type:
+        | "local_authority"
+        | "national_government"
+        | "devolved_government"
+        | "contractor"
+        | "transport_body"
+        | "utility"
+        | "private_operator"
+        | "other_public_body"
+        | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1309,6 +1479,17 @@ export const Constants = {
         "IN_PROGRESS",
         "RESOLVED",
         "REOPENED",
+      ],
+      organisation_type: [
+        "local_authority",
+        "national_government",
+        "devolved_government",
+        "contractor",
+        "transport_body",
+        "utility",
+        "private_operator",
+        "other_public_body",
+        "other",
       ],
     },
   },
