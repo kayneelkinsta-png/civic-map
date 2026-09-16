@@ -18,10 +18,11 @@ import {
   geocode,
   reverseGeocode,
   reversePostcode,
-  SOUTHAMPTON,
+  type AuthorityConfig,
   type Category,
   type NearbyAsset,
 } from "@/lib/civic";
+import { useAuthorityConfig } from "@/hooks/useAuthorityConfig";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/report")({
@@ -253,6 +254,8 @@ function ReportPage() {
               <CivicMap
                 issues={[]}
                 categories={categories}
+                centre={{ lat: config.map_centre_lat, lng: config.map_centre_lng }}
+                defaultZoom={config.map_default_zoom}
                 baseStyle="streets"
                 selectedId={null}
                 onSelect={() => {}}
