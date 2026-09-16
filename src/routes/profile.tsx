@@ -7,6 +7,7 @@ import { StatusChip } from "@/components/StatusChip";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthorityConfig } from "@/hooks/useAuthorityConfig";
 import { displayHandle, timeAgo, type Issue } from "@/lib/civic";
 import { cn } from "@/lib/utils";
 
@@ -34,6 +35,7 @@ const FIELDS =
 
 function ProfilePage() {
   const { user, profile, signOut } = useAuth();
+  const { config } = useAuthorityConfig();
   const [tab, setTab] = useState<Tab>("Reports");
 
   const { data: mine = [] } = useQuery({
@@ -164,7 +166,8 @@ function ProfilePage() {
                 <div className="min-w-0">
                   <p className="truncate font-semibold">{issue.title}</p>
                   <p className="truncate text-sm text-muted-foreground">
-                    {issue.address_text ?? "Southampton"} · {timeAgo(issue.created_at)}
+                    {issue.address_text ?? config?.location_fallback_label ?? "Location not given"} ·{" "}
+                    {timeAgo(issue.created_at)}
                   </p>
                 </div>
                 <StatusChip status={issue.status} />

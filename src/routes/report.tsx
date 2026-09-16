@@ -18,10 +18,11 @@ import {
   geocode,
   reverseGeocode,
   reversePostcode,
-  SOUTHAMPTON,
+  type AuthorityConfig,
   type Category,
   type NearbyAsset,
 } from "@/lib/civic";
+import { useAuthorityConfig } from "@/hooks/useAuthorityConfig";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/report")({
@@ -45,14 +46,29 @@ export const Route = createFileRoute("/report")({
 
 const STEPS = ["Category", "Location", "Details", "Photo", "Review"];
 
+/** Waits for the active authority configuration, which supplies the map defaults. */
 function ReportPage() {
+  const { config } = useAuthorityConfig();
+  if (!config) {
+    return (
+      <AppShell>
+        <div className="flex h-40 items-center justify-center text-muted-foreground">
+          <Loader2 className="h-5 w-5 animate-spin" />
+        </div>
+      </AppShell>
+    );
+  }
+  return <ReportFlow config={config} />;
+}
+
+function ReportFlow({ config }: { config: AuthorityConfig }) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { data: categories = [] } = useQuery({ queryKey: ["categories"], queryFn: fetchCategories });
 
   const [step, setStep] = useState(0);
   const [category, setCategory] = useState<Category | null>(null);
-  const [pin, setPin] = useState({ lat: SOUTHAMPTON.lat, lng: SOUTHAMPTON.lng });
+  const [pin, setPin] = useState({ lat: config.map_centre_lat, lng: config.map_centre_lng });
   const [flyTo, setFlyTo] = useState<{ lat: number; lng: number; zoom: number; key: number } | null>(
     null,
   );
@@ -253,6 +269,8 @@ function ReportPage() {
               <CivicMap
                 issues={[]}
                 categories={categories}
+                centre={{ lat: config.map_centre_lat, lng: config.map_centre_lng }}
+                defaultZoom={config.map_default_zoom}
                 baseStyle="streets"
                 selectedId={null}
                 onSelect={() => {}}

@@ -6,7 +6,7 @@ import { geocode } from "@/lib/civic";
 
 export function SearchBox({
   onResult,
-  placeholder = "Search Southampton or enter a postcode",
+  placeholder = "Search a place or enter a postcode",
 }: {
   onResult: (r: { lat: number; lng: number; label: string }) => void;
   placeholder?: string;

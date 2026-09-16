@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
 import { StatusChip } from "@/components/StatusChip";
+import { useAuthorityConfig } from "@/hooks/useAuthorityConfig";
 import { fetchCategories, fetchIssues, timeAgo } from "@/lib/civic";
 import { cn } from "@/lib/utils";
 
@@ -33,6 +34,7 @@ function IssuesPage() {
   const [openOnly, setOpenOnly] = useState(false);
   const [categoryId, setCategoryId] = useState<string | null>(null);
 
+  const { config } = useAuthorityConfig();
   const { data: categories = [] } = useQuery({ queryKey: ["categories"], queryFn: fetchCategories });
   const { data: issues = [], isLoading } = useQuery({ queryKey: ["issues"], queryFn: fetchIssues });
   const categoryById = useMemo(() => new Map(categories.map((c) => [c.id, c])), [categories]);
@@ -111,7 +113,8 @@ function IssuesPage() {
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-semibold">{issue.title}</p>
                   <p className="mt-0.5 truncate text-sm text-muted-foreground">
-                    {issue.address_text ?? "Southampton"} · reported {timeAgo(issue.created_at)}
+                    {issue.address_text ?? config?.location_fallback_label ?? "Location not given"} ·
+                    reported {timeAgo(issue.created_at)}
                   </p>
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <StatusChip status={issue.status} />

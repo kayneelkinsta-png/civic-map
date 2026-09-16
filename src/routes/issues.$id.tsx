@@ -312,6 +312,8 @@ function IssueDetail() {
               <CivicMap
                 issues={[issue]}
                 categories={categories}
+                centre={{ lat: issue.latitude, lng: issue.longitude }}
+                defaultZoom={16}
                 baseStyle="minimal"
                 selectedId={issue.id}
                 onSelect={() => {}}

@@ -13,6 +13,7 @@ import { SearchBox } from "@/components/SearchBox";
 import { CivicMap } from "@/components/map/CivicMap";
 import { BASE_STYLES, type BaseStyle } from "@/components/map/MapCanvas";
 import { Button } from "@/components/ui/button";
+import { useAuthorityConfig } from "@/hooks/useAuthorityConfig";
 import {
   fetchAreaAssetsInBounds,
   fetchAsset,
@@ -62,6 +63,7 @@ function MapHome() {
     bounds: { west: number; south: number; east: number; north: number };
   } | null>(null);
 
+  const { config } = useAuthorityConfig();
   const { data: categories = [] } = useQuery({ queryKey: ["categories"], queryFn: fetchCategories });
   const { data: issues = [] } = useQuery({ queryKey: ["issues"], queryFn: fetchIssues });
 
@@ -124,9 +126,12 @@ function MapHome() {
 
   return (
     <div className="relative h-[100dvh] w-full overflow-hidden">
+      {config && (
       <CivicMap
         issues={visible}
         categories={categories}
+        centre={{ lat: config.map_centre_lat, lng: config.map_centre_lng }}
+        defaultZoom={config.map_default_zoom}
         baseStyle={baseStyle}
         selectedId={selectedId}
         onSelect={(id) => {
@@ -143,6 +148,7 @@ function MapHome() {
         layers={{ issues: layerVis.issues, assets: layerVis.publicAssets || layerVis.busStops }}
         onViewportChange={setView}
       />
+      )}
 
       {/* Top chrome */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-20 p-3 md:p-4">
@@ -155,6 +161,7 @@ function MapHome() {
           </div>
           <div className="pointer-events-auto min-w-0 flex-1 md:mx-auto md:max-w-md">
             <SearchBox
+              {...(config?.search_label ? { placeholder: config.search_label } : {})}
               onResult={(r) => {
                 setFlyTo({ lat: r.lat, lng: r.lng, zoom: 15.5, key: Date.now() });
               }}
