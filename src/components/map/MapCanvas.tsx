@@ -59,6 +59,8 @@ const AREA_MIN_ZOOM = 13.5;
 export default function MapCanvas({
   issues,
   categories,
+  centre,
+  defaultZoom,
   baseStyle,
   selectedId,
   onSelect,
@@ -129,8 +131,8 @@ export default function MapCanvas({
     const map = new MapLibreMap({
       container: containerRef.current,
       style: BASE_STYLES[baseStyle].url,
-      center: [SOUTHAMPTON.lng, SOUTHAMPTON.lat],
-      zoom: SOUTHAMPTON.zoom,
+      center: [centre.lng, centre.lat],
+      zoom: defaultZoom,
       attributionControl: { compact: true },
     });
     mapRef.current = map;
