@@ -11,7 +11,7 @@ import type { FeatureCollection, Point } from "geojson";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useEffect, useRef } from "react";
 
-import { assetMeta, SOUTHAMPTON, type Category, type InfrastructureAsset, type Issue } from "@/lib/civic";
+import { assetMeta, type Category, type InfrastructureAsset, type Issue } from "@/lib/civic";
 
 export type BaseStyle = "streets" | "minimal" | "satellite-lite";
 
@@ -24,6 +24,9 @@ export const BASE_STYLES: Record<BaseStyle, { label: string; url: string }> = {
 type Props = {
   issues: Issue[];
   categories: Category[];
+  /** Initial view, supplied by the active authority configuration. */
+  centre: { lat: number; lng: number };
+  defaultZoom: number;
   baseStyle: BaseStyle;
   selectedId: string | null;
   onSelect: (id: string | null) => void;
