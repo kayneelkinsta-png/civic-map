@@ -716,23 +716,33 @@ Start by creating the application shell, design system, Supabase schema, authent
 
 Then implement the core issue/report/confirmation workflow.
 
-This project was built with [Lovable](https://lovable.dev).
+## Independent development
 
-## Build with Lovable
+CivicLense is a TanStack Start application backed by Supabase. It is independently deployable and has no Lovable runtime or build dependency.
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/7c2e7e16-474b-43e0-870c-1c5ecff8358a).
+### Requirements
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+- Bun
+- A Supabase project with the migrations in `supabase/migrations` applied
 
-## Development
+### Environment
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+Copy `.env.example` to `.env.local` and supply the required Supabase values. Never commit service-role credentials.
+
+### Local development
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+bun install
+bun run dev
 ```
+
+### Production build
+
+```sh
+bun run build
+bun run start
+```
+
+### Hosting
+
+The repository includes explicit Vercel framework configuration. Import the GitHub repository into Vercel and configure the environment variables listed in `.env.example`. Pushes to the production branch deploy automatically; pull requests receive preview deployments.
